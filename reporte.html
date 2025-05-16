@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte de Registros - BRIMEZ</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .filtros {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    .filtro-periodo {
+      display: flex;
+      gap: 5px;
+    }
+    .filtro-periodo button {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .filtro-periodo button.activo {
+      background-color: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f2f2f2;
+      position: sticky;
+      top: 0;
+    }
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    .totales {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .totales div {
+      flex: 1;
+      text-align: center;
+    }
+    .totales h3 {
+      margin-bottom: 5px;
+      color: #333;
+    }
+    .totales p {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .horas-extra {
+      color: #ff9800;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Reporte de Registros</h1>
+      <div id="clock"></div>
+    </header>
+    
+    <div class="filtros">
+      <div>
+        <label for="filtroEmpleado">Empleado:</label>
+        <select id="filtroEmpleado">
+          <option value="todos">Todos los empleados</option>
+        </select>
+      </div>
+      <div class="filtro-periodo">
+        <label>Período:</label>
+        <button data-periodo="dia" class="activo">Día</button>
+        <button data-periodo="semana">Semana</button>
+        <button data-periodo="quincena">Quincena</button>
+        <button data-periodo="mes">Mes</button>
+      </div>
+    </div>
+    
+    <div id="registroContainer"></div>
+    
+    <div class="totales">
+      <div>
+        <h3>Total Registros</h3>
+        <p id="totalRegistros">0</p>
+      </div>
+      <div id="totalHorasContainer">
+        <h3>Total Horas Trabajadas</h3>
+        <p id="totalHoras">0h</p>
+      </div>
+      <div>
+        <h3>Total Horas Extras</h3>
+        <p id="totalExtras" class="horas-extra">0h</p>
+      </div>
+    </div>
+    
+    <div class="nav-buttons">
+      <a href="index.html" class="link-button">🏠 Volver al Inicio</a>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    setInterval(() => {
+      const ahora = new Date();
+      document.getElementById('clock').textContent = ahora.toLocaleTimeString('es-ES');
+    }, 1000);
+
+    let periodoActual = 'dia';
+    let empleadoActual = 'todos';
+    let datosEmpleados = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+      datosEmpleados = JSON.parse(localStorage.getItem('empleadosCompletos')) || {};
+      inicializarFiltroEmpleados();
+
+      document.getElementById('filtroEmpleado').addEventListener('change', (e) => {
+        empleadoActual = e.target.value;
+        cargarRegistros();
+      });
+
+      document.querySelectorAll('.filtro-periodo button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filtro-periodo button').forEach(b => b.classList.remove('activo'));
+          btn.classList.add('activo');
+          periodoActual = btn.dataset.periodo;
+          cargarRegistros();
+        });
+      });
+
+      cargarRegistros();
+    });
+
+    function inicializarFiltroEmpleados() {
+      const selectEmpleado = document.getElementById('filtroEmpleado');
+      const registros = JSON.parse(localStorage.getItem('registros')) || [];
+      const empleadosUnicos = new Set();
+
+      registros.forEach(registro => {
+        if (registro.nombre) {
+          empleadosUnicos.add(registro.nombre);
+        }
+      });
+
+      empleadosUnicos.forEach(nombre => {
+        const option = document.createElement('option');
+        option.value = nombre;
+        option.textContent = nombre;
+        selectEmpleado.appendChild(option);
+      });
+    }
+
+    function cargarRegistros() {
+      const registros = JSON.parse(localStorage.getItem('registros')) || [];
+      const container = document.getElementById('registroContainer');
+      const fechaLimite = obtenerFechaLimite(periodoActual);
+      let registrosFiltrados = registros.filter(registro => {
+        const fechaRegistro = registro.fechaCompleta ? new Date(registro.fechaCompleta) : new Date();
+        return fechaRegistro >= fechaLimite;
+      });
+
+      if (empleadoActual !== 'todos') {
+        registrosFiltrados = registrosFiltrados.filter(registro => registro.nombre === empleadoActual);
+      }
+
+      if (registrosFiltrados.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12" y2="16"></line>
+            </svg>
+            <h3>No hay registros para el período seleccionado</h3>
+            <p>Prueba con otro período o empleado.</p>
+          </div>
+        `;
+        actualizarTotales(0, 0, 0);
+        return;
+      }
+
+      const registrosProcesados = procesarRegistros(registrosFiltrados);
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Fecha</th>
+              <th>Entrada</th>
+              <th>Salida</th>
+              <th>Horas Trabajadas</th>
+              <th>Horas Extras</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      let totalRegistros = 0;
+      let totalHorasTrabajadas = 0;
+      let totalHorasExtras = 0;
+
+      registrosProcesados.forEach(registro => {
+        totalRegistros++;
+        totalHorasTrabajadas += registro.horasTrabajadas || 0;
+        totalHorasExtras += registro.horasExtras || 0;
+
+        html += `
+          <tr>
+            <td>${registro.id}</td>
+            <td>${registro.nombre}</td>
+            <td>${registro.fecha}</td>
+            <td>${registro.horaEntrada || '-'}</td>
+            <td>${registro.horaSalida || '-'}</td>
+            <td>${formatearHoras(registro.horasTrabajadas)}</td>
+            <td>${formatearHoras(registro.horasExtras)}</td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+      actualizarTotales(totalRegistros, totalHorasTrabajadas, totalHorasExtras);
+
+      // MOSTRAR u OCULTAR bloque "Total Horas Trabajadas"
+      const totalHorasContainer = document.getElementById('totalHorasContainer');
+      if (empleadoActual === 'todos') {
+        totalHorasContainer.style.display = 'none';
+      } else {
+        totalHorasContainer.style.display = 'block';
+      }
+    }
+
+    function procesarRegistros(registros) {
+      const registrosPorEmpleadoDia = {};
+      registros.forEach(registro => {
+        if (!registro.fechaCompleta) return;
+        const fecha = new Date(registro.fechaCompleta).toLocaleDateString('es-ES');
+        const id = registro.id;
+        const clave = `${id}-${fecha}`;
+
+        if (!registrosPorEmpleadoDia[clave]) {
+          registrosPorEmpleadoDia[clave] = {
+            id: id,
+            nombre: registro.nombre,
+            fecha: fecha,
+            entradas: [],
+            salidas: []
+          };
+        }
+
+        if (registro.accion === 'Entrada') {
+          registrosPorEmpleadoDia[clave].entradas.push({ hora: registro.hora, fechaCompleta: registro.fechaCompleta });
+        } else if (registro.accion === 'Salida') {
+          registrosPorEmpleadoDia[clave].salidas.push({ hora: registro.hora, fechaCompleta: registro.fechaCompleta });
+        }
+      });
+
+      const resultados = [];
+      Object.values(registrosPorEmpleadoDia).forEach(grupo => {
+        grupo.entradas.sort((a, b) => new Date(a.fechaCompleta) - new Date(b.fechaCompleta));
+        grupo.salidas.sort((a, b) => new Date(a.fechaCompleta) - new Date(b.fechaCompleta));
+
+        const entrada = grupo.entradas[0] || null;
+        const salida = grupo.salidas[grupo.salidas.length - 1] || null;
+
+        if (entrada && salida) {
+          const resultado = {
+            id: grupo.id,
+            nombre: grupo.nombre,
+            fecha: grupo.fecha,
+            horaEntrada: entrada.hora,
+            horaSalida: salida.hora
+          };
+
+          const datosEmpleado = datosEmpleados[grupo.id];
+          if (datosEmpleado) {
+            const { horasTrabajadas, horasExtras } = calcularHoras(
+              entrada.fechaCompleta, salida.fechaCompleta, datosEmpleado
+            );
+            resultado.horasTrabajadas = horasTrabajadas;
+            resultado.horasExtras = horasExtras;
+          }
+
+          resultados.push(resultado);
+        }
+      });
+
+      return resultados;
+    }
+
+    function calcularHoras(entradaStr, salidaStr, datosEmpleado) {
+      const entrada = new Date(entradaStr);
+      const salida = new Date(salidaStr);
+      let tiempoTotal = salida - entrada;
+      let horasTrabajadas = tiempoTotal / (1000 * 60 * 60);
+      if (horasTrabajadas > 8) horasTrabajadas -= 2;
+      horasTrabajadas = Math.max(0, horasTrabajadas);
+      let horasExtras = 0;
+
+      if (datosEmpleado) {
+        const horarioInicio = datosEmpleado.horaEntrada || datosEmpleado.horarioEntrada;
+        const horarioFin = datosEmpleado.horaSalida || datosEmpleado.horarioSalida;
+        if (horarioInicio && horarioFin) {
+          const fechaBase = new Date(entrada);
+          fechaBase.setHours(0, 0, 0, 0);
+          const [hI, mI] = horarioInicio.split(':').map(Number);
+          const [hF, mF] = horarioFin.split(':').map(Number);
+          const inicioLaboral = new Date(fechaBase);
+          const finLaboral = new Date(fechaBase);
+          inicioLaboral.setHours(hI, mI, 0);
+          finLaboral.setHours(hF, mF, 0);
+
+          if (entrada < inicioLaboral) horasExtras += (inicioLaboral - entrada) / (1000 * 60 * 60);
+          if (salida > finLaboral) horasExtras += (salida - finLaboral) / (1000 * 60 * 60);
+        }
+      }
+
+      return { horasTrabajadas, horasExtras };
+    }
+
+    function obtenerFechaLimite(periodo) {
+      const ahora = new Date();
+      const fechaLimite = new Date(ahora);
+      switch (periodo) {
+        case 'dia': fechaLimite.setHours(0, 0, 0, 0); break;
+        case 'semana': fechaLimite.setDate(ahora.getDate() - 7); break;
+        case 'quincena': fechaLimite.setDate(ahora.getDate() - 15); break;
+        case 'mes': fechaLimite.setDate(ahora.getDate() - 30); break;
+      }
+      return fechaLimite;
+    }
+
+    function formatearHoras(horas) {
+      if (horas === undefined || horas === null) return '-';
+      horas = Math.round(horas * 100) / 100;
+      return `${horas.toFixed(2)} h`;
+    }
+
+    function actualizarTotales(registros, horas, extras) {
+      document.getElementById('totalRegistros').textContent = registros;
+      document.getElementById('totalHoras').textContent = formatearHoras(horas);
+      document.getElementById('totalExtras').textContent = formatearHoras(extras);
+    }
+  </script>
+</body>
+</html>

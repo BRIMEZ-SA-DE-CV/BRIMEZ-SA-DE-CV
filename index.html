@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Control de Empleados</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+      body {
+          background-image: url('fondobrimez.jpeg');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+      }
+      
+      h1 {
+          margin: 10px 0 5px;
+          font-size: 1.8rem;
+      }
+      
+      #clock {
+          margin: 0 0 5px;
+          font-size: 1.2rem;
+      }
+      
+      .contenedor {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 5px;
+          align-items: center;
+          flex: 1;
+          overflow: hidden;
+      }
+      
+      .card, .registro {
+          background-color: rgba(255, 255, 255, 0.8);
+          padding: 15px;
+          border-radius: 8px;
+          width: 793px;
+          max-width: 95%;
+      }
+      
+      .card {
+          flex-shrink: 0;
+      }
+      
+      .registro {
+          flex: 1;
+          overflow-y: auto;
+          max-height: calc(100vh - 250px);
+      }
+      
+      /* Estilos para los campos de texto */
+      #employeeId, #employeeName {
+          width: 70%;
+          margin: 3px auto;
+          padding: 6px;
+          border-radius: 4px;
+          border: 1px solid #ced4da;
+          display: block;
+      }
+      
+      /* Estilos para las etiquetas */
+      label {
+          display: block;
+          margin-top: 5px;
+          text-align: center;
+          font-size: 0.9rem;
+      }
+      
+      /* Estilos para los botones */
+      .buttons {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 10px;
+      }
+      
+      .entrada, .salida {
+          padding: 6px 12px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: bold;
+          font-size: 0.9rem;
+      }
+      
+      /* Contenedor de botones de navegación */
+      .nav-buttons {
+          display: flex;
+          justify-content: center;
+          padding: 5px 0;
+          flex-shrink: 0;
+      }
+      
+      .link-button {
+          display: inline-block;
+          padding: 8px 12px;
+          margin: 3px;
+          background-color: #007bff;
+          color: white;
+          text-decoration: none;
+          border-radius: 5px;
+          text-align: center;
+          font-size: 0.85rem;
+      }
+      
+      /* Ajustes para las tarjetas de empleados */
+      .empleado-card {
+          margin-bottom: 10px;
+      }
+      
+      .empleado-header {
+          padding: 8px 12px;
+          font-size: 0.9rem;
+      }
+      
+      .empleado-registros {
+          padding: 10px;
+      }
+      
+      .registro-item {
+          padding: 6px;
+          margin-bottom: 3px;
+          font-size: 0.85rem;
+      }
+      
+      .registro-titulo {
+          margin-bottom: 5px;
+          padding-bottom: 3px;
+          font-size: 0.9rem;
+      }
+      .link-button:hover {
+          background-color: #0056b3;
+      }
+      .contenedor {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          margin-top: 20px;
+          align-items: center;
+      }
+      .card, .registro {
+          background-color: rgba(255, 255, 255, 0.8);
+          padding: 20px;
+          border-radius: 8px;
+          width: 793px; /* Aumentado un 15% de 690px */
+          max-width: 95%;
+      }
+      .registro {
+          max-height: 575px; /* Aumentado un 15% de 500px */
+          overflow-y: auto;
+      }
+      
+      /* Estilos para los campos de texto */
+      #employeeId, #employeeName {
+          width: 70%; /* Reducido aún más (15% adicional del 85% anterior) */
+          margin: 5px auto;
+          padding: 8px;
+          border-radius: 4px;
+          border: 1px solid #ced4da;
+          display: block; /* Para centrar con margin auto */
+      }
+      
+      /* Estilos para las etiquetas */
+      label {
+          display: block;
+          margin-top: 10px;
+          text-align: center;
+      }
+      
+      /* Estilos para los botones */
+      .buttons {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 15px;
+      }
+      
+      .entrada, .salida {
+          padding: 8px 15px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: bold;
+      }
+      
+      .entrada {
+          background-color: #28a745;
+          color: white;
+      }
+      
+      .salida {
+          background-color: #dc3545;
+          color: white;
+      }
+      
+      .empleado-card {
+          background-color: #f8f9fa;
+          border-radius: 6px;
+          margin-bottom: 15px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          overflow: hidden;
+      }
+      .empleado-header {
+          background-color: #343a40;
+          color: white;
+          padding: 10px 15px;
+          font-weight: bold;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+      }
+      .empleado-registros {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          padding: 15px;
+      }
+      .registro-seccion {
+          flex: 1;
+          min-width: 250px;
+      }
+      .registro-titulo {
+          font-weight: bold;
+          margin-bottom: 8px;
+          padding-bottom: 5px;
+          border-bottom: 2px solid #dee2e6;
+      }
+      .registro-entrada .registro-titulo {
+          color: #28a745;
+          border-color: #28a745;
+      }
+      .registro-salida .registro-titulo {
+          color: #dc3545;
+          border-color: #dc3545;
+      }
+      .registro-item {
+          padding: 8px;
+          margin-bottom: 5px;
+          border-radius: 4px;
+          display: flex;
+          justify-content: space-between;
+      }
+      .registro-entrada .registro-item {
+          background-color: rgba(40, 167, 69, 0.1);
+          border-left: 3px solid #28a745;
+      }
+      .registro-salida .registro-item {
+          background-color: rgba(220, 53, 69, 0.1);
+          border-left: 3px solid #dc3545;
+      }
+      .sin-registros {
+          font-style: italic;
+          color: #6c757d;
+          padding: 8px;
+      }
+      .accion-icon {
+          margin-right: 5px;
+      }
+      #toastContainer {
+          position: fixed;
+          top: 50%; /* Cambiado de 20px a 50% para centrarlo verticalmente */
+          left: 50%;
+          transform: translate(-50%, -50%); /* Modificado para centrar tanto horizontal como verticalmente */
+          z-index: 1000;
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          pointer-events: none; /* Para que no bloquee interacciones con elementos debajo */
+      }
+      .toast {
+          background-color: #333;
+          color: white;
+          padding: 15px 25px; /* Aumentado el padding */
+          margin-bottom: 10px;
+          border-radius: 8px; /* Aumentado el radio del borde */
+          opacity: 0.95; /* Aumentado la opacidad */
+          animation: fadeOut 2.5s forwards;
+          font-size: 18px; /* Aumentado el tamaño de la fuente */
+          font-weight: 500; /* Añadido peso a la fuente */
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Añadida sombra */
+          max-width: 80%; /* Limitado el ancho máximo */
+          text-align: center; /* Centrado el texto */
+          pointer-events: auto; /* Para permitir interacciones con el toast */
+      }
+      .toast-error {
+          background-color: #dc3545;
+          animation: shake 0.5s, fadeOut 2.5s 0.5s forwards;
+      }
+      .toast-success {
+          background-color: #28a745;
+      }
+      @keyframes fadeOut {
+          0% { opacity: 0.9; }
+          100% { opacity: 0; display: none; }
+      }
+      @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+      }
+      .empty-state {
+          text-align: center;
+          padding: 30px;
+          color: #6c757d;
+      }
+      .empty-state p {
+          margin-top: 10px;
+          font-size: 14px;
+      }
+  </style>
+</head>
+<body>
+  <h1>Registro de Empleados</h1>
+  <div id="clock">--:--:--</div>
+
+  <div class="contenedor">
+    <div class="card">
+      <label for="employeeId">ID del empleado:</label>
+      <input type="text" id="employeeId" placeholder="Ej. 1234" />
+      <label for="employeeName">Nombre del empleado:</label>
+      <input type="text" id="employeeName" placeholder="Nombre aparecerá automáticamente" disabled />
+
+      <div class="buttons">
+        <button class="entrada" onclick="registrar('Entrada')">Registrar Entrada</button>
+        <button class="salida" onclick="registrar('Salida')">Registrar Salida</button>
+      </div>
+    </div>
+
+    <div class="registro" id="registroContainer">
+      <!-- Aquí se cargarán los registros agrupados por empleado -->
+    </div>
+    
+    <div class="nav-buttons">
+      <a href="usuarios.html" class="link-button">➕ Gestionar usuarios</a>
+      <a href="reporte.html" class="link-button">📊 Ver reporte</a>
+      <button onclick="reiniciarRegistros()" class="link-button" style="background-color: #dc3545;">🗑️ Reinicio</button>
+    </div>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <script>
+    setInterval(() => {
+      const ahora = new Date();
+      document.getElementById('clock').textContent = ahora.toLocaleTimeString('es-ES');
+    }, 1000);
+
+    function mostrarToast(mensaje, tipo = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${tipo === 'error' ? 'toast-error' : 'toast-success'}`;
+      toast.textContent = mensaje;
+      document.getElementById('toastContainer').appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+
+    document.getElementById("employeeId").addEventListener("input", () => {
+      const id = document.getElementById("employeeId").value.trim();
+      const empleados = JSON.parse(localStorage.getItem("empleados")) || {};
+      
+      if (empleados[id] && empleados[id].nombre) {
+        document.getElementById("employeeName").value = empleados[id].nombre;
+      } else {
+        document.getElementById("employeeName").value = "ID no registrado";
+      }
+    });
+
+    // Verificar si ya existe una entrada o salida para el empleado en el día actual
+    function verificarRegistroPrevio(id, accion) {
+      const registros = JSON.parse(localStorage.getItem("registros")) || [];
+      const hoy = new Date().toLocaleDateString('es-ES');
+      
+      // Filtrar registros del empleado para hoy
+      const registrosHoyEmpleado = registros.filter(registro => {
+        const fechaRegistro = registro.fechaCompleta ? 
+                             new Date(registro.fechaCompleta).toLocaleDateString('es-ES') : 
+                             hoy; // Para registros antiguos sin fecha
+        
+        return registro.id === id && fechaRegistro === hoy;
+      });
+      
+      if (accion === "Entrada") {
+        // Verificar si ya hay una entrada hoy
+        const tieneEntradaHoy = registrosHoyEmpleado.some(r => r.accion === "Entrada");
+        if (tieneEntradaHoy) {
+          return { valido: false, mensaje: "⚠️ Ya registraste tu entrada hoy." };
+        }
+        
+        // Verificar si hay una entrada sin salida (no debería ocurrir si la validación anterior funciona)
+        const tieneEntradaSinSalida = registrosHoyEmpleado.filter(r => r.accion === "Entrada").length > 
+                                     registrosHoyEmpleado.filter(r => r.accion === "Salida").length;
+        if (tieneEntradaSinSalida) {
+          return { valido: false, mensaje: "⚠️ Ya registraste tu entrada, primero debes registrar tu salida." };
+        }
+        
+        return { valido: true, mensaje: "✅ Entrada registrada exitosamente." };
+      } 
+      else if (accion === "Salida") {
+        // Verificar si ya hay una salida hoy
+        const tieneSalidaHoy = registrosHoyEmpleado.some(r => r.accion === "Salida");
+        if (tieneSalidaHoy) {
+          return { valido: false, mensaje: "⚠️ Ya registraste tu salida hoy." };
+        }
+        
+        // Verificar si hay una entrada previa hoy
+        const tieneEntradaHoy = registrosHoyEmpleado.some(r => r.accion === "Entrada");
+        if (!tieneEntradaHoy) {
+          return { valido: false, mensaje: "⚠️ No puedes registrar salida sin haber registrado entrada." };
+        }
+        
+        // Verificar si hay más entradas que salidas (debe haber una entrada sin salida)
+        const tieneEntradaSinSalida = registrosHoyEmpleado.filter(r => r.accion === "Entrada").length > 
+                                     registrosHoyEmpleado.filter(r => r.accion === "Salida").length;
+        if (!tieneEntradaSinSalida) {
+          return { valido: false, mensaje: "⚠️ No hay una entrada activa para registrar salida." };
+        }
+        
+        return { valido: true, mensaje: "✅ Salida registrada exitosamente." };
+      }
+      
+      return { valido: false, mensaje: "Acción no reconocida" };
+    }
+
+    // Cargar registros existentes al iniciar la página
+    function cargarRegistrosExistentes() {
+      const registros = JSON.parse(localStorage.getItem("registros")) || [];
+      const container = document.getElementById("registroContainer");
+      container.innerHTML = ""; // Limpiar contenedor
+      
+      // Filtrar solo los registros del día actual
+      const hoy = new Date().toLocaleDateString('es-ES');
+      const registrosHoy = registros.filter(registro => {
+        // Si el registro tiene fecha completa, extraer solo la fecha
+        if (registro.fechaCompleta) {
+          return new Date(registro.fechaCompleta).toLocaleDateString('es-ES') === hoy;
+        }
+        // Para registros antiguos sin fecha completa, mostrarlos todos
+        return true;
+      });
+      
+      // Si no hay registros, mostrar mensaje
+      if (registrosHoy.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12" y2="16"></line>
+            </svg>
+            <h3>No hay registros para hoy</h3>
+            <p>Los registros de entrada y salida aparecerán aquí.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Agrupar registros por empleado
+      const registrosPorEmpleado = {};
+      
+      registrosHoy.forEach(registro => {
+        if (!registrosPorEmpleado[registro.id]) {
+          registrosPorEmpleado[registro.id] = {
+            id: registro.id,
+            nombre: registro.nombre,
+            entradas: [],
+            salidas: []
+          };
+        }
+        
+        if (registro.accion === "Entrada") {
+          registrosPorEmpleado[registro.id].entradas.push(registro);
+        } else if (registro.accion === "Salida") {
+          registrosPorEmpleado[registro.id].salidas.push(registro);
+        }
+      });
+      
+      // Ordenar las entradas y salidas por hora (más recientes primero)
+      Object.values(registrosPorEmpleado).forEach(empleado => {
+        empleado.entradas.sort((a, b) => {
+          if (a.fechaCompleta && b.fechaCompleta) {
+            return new Date(b.fechaCompleta) - new Date(a.fechaCompleta);
+          }
+          return 0;
+        });
+        
+        empleado.salidas.sort((a, b) => {
+          if (a.fechaCompleta && b.fechaCompleta) {
+            return new Date(b.fechaCompleta) - new Date(a.fechaCompleta);
+          }
+          return 0;
+        });
+      });
+      
+      // Crear tarjetas para cada empleado
+      Object.values(registrosPorEmpleado).forEach(empleado => {
+        const empleadoCard = document.createElement("div");
+        empleadoCard.className = "empleado-card";
+        
+        empleadoCard.innerHTML = `
+          <div class="empleado-header">
+            <span>${empleado.nombre} (ID: ${empleado.id})</span>
+            <span>${hoy}</span>
+          </div>
+          <div class="empleado-registros">
+            <div class="registro-seccion registro-entrada">
+              <div class="registro-titulo">
+                <span class="accion-icon">⬇️</span> Entradas (${empleado.entradas.length})
+              </div>
+              ${empleado.entradas.length > 0 ? 
+                empleado.entradas.map(entrada => `
+                  <div class="registro-item">
+                    <span>${entrada.hora}</span>
+                  </div>
+                `).join('') : 
+                '<div class="sin-registros">No hay registros de entrada</div>'
+              }
+            </div>
+            <div class="registro-seccion registro-salida">
+              <div class="registro-titulo">
+                <span class="accion-icon">⬆️</span> Salidas (${empleado.salidas.length})
+              </div>
+              ${empleado.salidas.length > 0 ? 
+                empleado.salidas.map(salida => `
+                  <div class="registro-item">
+                    <span>${salida.hora}</span>
+                  </div>
+                `).join('') : 
+                '<div class="sin-registros">No hay registros de salida</div>'
+              }
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(empleadoCard);
+      });
+    }
+
+    // Función para guardar datos de empleado
+    function guardarDatosEmpleado(id, nombre, horarioEntrada, horarioSalida) {
+      // Obtener datos existentes
+      let datosEmpleados = JSON.parse(localStorage.getItem('empleadosCompletos')) || {};
+      
+      // Actualizar o agregar datos del empleado
+      datosEmpleados[id] = {
+        id: id,
+        nombre: nombre,
+        horarioEntrada: horarioEntrada,
+        horarioSalida: horarioSalida
+      };
+      
+      // Guardar en localStorage
+      localStorage.setItem('empleadosCompletos', JSON.stringify(datosEmpleados));
+    }
+    
+    // Modificar la función registrar para incluir validaciones y guardar datos del empleado
+    function registrar(accion) {
+      const id = document.getElementById("employeeId").value.trim();
+      const nombre = document.getElementById("employeeName").value;
+      
+      if (id && nombre !== "ID no registrado") {
+        // Verificar si el registro es válido
+        const verificacion = verificarRegistroPrevio(id, accion);
+        
+        if (verificacion.valido) {
+          const ahora = new Date();
+          const hora = ahora.toLocaleTimeString('es-ES');
+          const fechaCompleta = ahora.toISOString();
+          
+          // Obtener horarios del empleado (si existen en la interfaz)
+          const horarioEntrada = document.getElementById('horarioEntrada') ? 
+                                document.getElementById('horarioEntrada').value : '08:00';
+          const horarioSalida = document.getElementById('horarioSalida') ? 
+                               document.getElementById('horarioSalida').value : '17:00';
+          
+          // Guardar datos completos del empleado
+          guardarDatosEmpleado(id, nombre, horarioEntrada, horarioSalida);
+          
+          const registro = { id, nombre, accion, hora, fechaCompleta };
+          const registros = JSON.parse(localStorage.getItem("registros")) || [];
+          registros.push(registro);
+          localStorage.setItem("registros", JSON.stringify(registros));
+          
+          // Actualizar la visualización de registros
+          cargarRegistrosExistentes();
+          mostrarToast(verificacion.mensaje, 'success');
+          
+          // Limpiar campos después del registro
+          document.getElementById("employeeId").value = "";
+          document.getElementById("employeeName").value = "";
+        } else {
+          mostrarToast(verificacion.mensaje, 'error');
+        }
+      } else {
+        mostrarToast("⚠️ Por favor ingresa un ID de empleado válido", 'error');
+      }
+    }
+
+    function reiniciarRegistros() {
+      if (confirm("¿Estás seguro de que deseas eliminar todos los registros del día?")) {
+        localStorage.removeItem("registros");
+        cargarRegistrosExistentes();
+        mostrarToast("✅ Registros reiniciados correctamente", 'success');
+      }
+    }
+
+    // Cargar registros al iniciar la página
+    document.addEventListener("DOMContentLoaded", () => {
+      setInterval(() => {
+        const ahora = new Date();
+        document.getElementById('clock').textContent = ahora.toLocaleTimeString('es-ES');
+      }, 1000);
+      
+      document.getElementById("employeeId").addEventListener("input", () => {
+        const id = document.getElementById("employeeId").value.trim();
+        const empleados = JSON.parse(localStorage.getItem("empleados")) || {};
+        
+        if (empleados[id] && empleados[id].nombre) {
+          document.getElementById("employeeName").value = empleados[id].nombre;
+        } else {
+          document.getElementById("employeeName").value = "ID no registrado";
+        }
+      });
+      
+      cargarRegistrosExistentes();
+    });
+  </script>
+</body>
+</html>
