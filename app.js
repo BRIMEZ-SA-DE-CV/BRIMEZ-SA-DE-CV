@@ -53,12 +53,25 @@ function obtenerNombreEmpleado(id) {
 
 // Función para obtener los datos completos de un empleado por su ID
 function obtenerDatosEmpleado(id) {
-  const empleadosCompletos = JSON.parse(localStorage.getItem("empleadosCompletos")) || {};
-  return empleadosCompletos[id] || null;
+  return new Promise((resolve, reject) => {
+    db.collection("empleados").doc(id).get()
+      .then((doc) => {
+        if (doc.exists) {
+          resolve(doc.data());
+        } else {
+          resolve(null);
+        }
+      })
+      .catch((error) => {
+        console.error("Error al obtener datos del empleado:", error);
+        reject(error);
+      });
+  });
 }
 
 // Función para calcular horas trabajadas
-function calcularHorasTrabajadas(entrada, salida, comidaInicio, comidaFin) {
+// ❌ Cálculo manual propenso a errores
+function calcularHorasTrabajadas(entrada, salida) {
   // Convertir strings de hora a objetos Date
   const hoy = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
   
@@ -81,6 +94,9 @@ function calcularHorasTrabajadas(entrada, salida, comidaInicio, comidaFin) {
   
   return horasTrabajadas;
 }
+
+// ✅ Usar biblioteca como date-fns o moment.js
+import { differenceInHours } from 'date-fns';
 
 // Función para calcular horas extras
 function calcularHorasExtras(entrada, salida, comidaInicio, comidaFin, horaEntradaNormal, horaSalidaNormal) {
@@ -137,3 +153,20 @@ window.appUtils = {
   calcularHorasExtras,
   irAPagina
 };
+
+
+// ❌ Consultas múltiples
+db.collection("registros")
+  .where("fechaCompleta", ">=", inicioHoy.toISOString())
+  .where("fechaCompleta", "<", finHoy.toISOString())
+
+// ✅ Usar composite queries
+const registrosQuery = query(
+  collection(db, "registros"),
+  and(
+    where("fechaCompleta", ">=", inicioHoy),
+    where("fechaCompleta", "<", finHoy)
+  ),
+  orderBy("fechaCompleta", "desc")
+);
+

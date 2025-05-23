@@ -1,371 +1,275 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reporte de Registros - BRIMEZ</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reporte de Asistencia - BRIMEZ</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f4f4f4;
+    }
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    nav {
+      background: #ecf0f1;
+      padding: 10px;
+      text-align: center;
+    }
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #2c3e50;
+      font-weight: bold;
+    }
     .filtros {
       display: flex;
+      justify-content: space-between;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      align-items: center;
+      padding: 10px 20px;
+      background: white;
     }
-    .filtro-periodo {
-      display: flex;
-      gap: 5px;
+    select, button {
+      padding: 6px 10px;
+      margin: 5px;
     }
-    .filtro-periodo button {
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      background-color: #f0f0f0;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .filtro-periodo button.activo {
-      background-color: #4CAF50;
+    button.activo {
+      background-color: #3498db;
       color: white;
-      border-color: #4CAF50;
+      border: none;
+    }
+    #registroContainer {
+      padding: 20px;
+      overflow-x: auto;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      background: white;
+      margin-bottom: 30px;
     }
     th, td {
-      padding: 10px;
+      border: 1px solid #ddd;
+      padding: 8px;
       text-align: left;
-      border-bottom: 1px solid #ddd;
     }
     th {
-      background-color: #f2f2f2;
-      position: sticky;
-      top: 0;
+      background-color: #bdc3c7;
     }
-    tr:hover {
-      background-color: #f5f5f5;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: #666;
+    h3 {
+      background: #ecf0f1;
+      padding: 10px;
+      margin-top: 20px;
     }
     .totales {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #f9f9f9;
-      border-radius: 5px;
+      background: #fff;
+      padding: 10px 20px;
       display: flex;
-      justify-content: space-between;
-    }
-    .totales div {
-      flex: 1;
-      text-align: center;
-    }
-    .totales h3 {
-      margin-bottom: 5px;
-      color: #333;
-    }
-    .totales p {
-      font-size: 1.2em;
+      justify-content: space-around;
       font-weight: bold;
-      color: #4CAF50;
-    }
-    .horas-extra {
-      color: #ff9800;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Reporte de Registros</h1>
-      <div id="clock"></div>
-    </header>
-    
-    <div class="filtros">
-      <div>
-        <label for="filtroEmpleado">Empleado:</label>
-        <select id="filtroEmpleado">
-          <option value="todos">Todos los empleados</option>
-        </select>
-      </div>
-      <div class="filtro-periodo">
-        <label>Período:</label>
-        <button data-periodo="dia" class="activo">Día</button>
-        <button data-periodo="semana">Semana</button>
-        <button data-periodo="quincena">Quincena</button>
-        <button data-periodo="mes">Mes</button>
-      </div>
+
+  <header>
+    <h1>Reporte de Asistencia</h1>
+    <p id="clock"></p>
+  </header>
+
+  <nav>
+    <a href="index.html">🏠 Inicio</a>
+    <a href="usuarios.html">👤 Usuarios</a>
+    <a href="reporte.html">📄 Reporte</a>
+  </nav>
+
+  <div class="filtros">
+    <div>
+      <label for="filtroEmpleado">Empleado:</label>
+      <select id="filtroEmpleado">
+        <option value="todos">Todos</option>
+      </select>
     </div>
-    
-    <div id="registroContainer"></div>
-    
-    <div class="totales">
-      <div>
-        <h3>Total Registros</h3>
-        <p id="totalRegistros">0</p>
-      </div>
-      <div id="totalHorasContainer">
-        <h3>Total Horas Trabajadas</h3>
-        <p id="totalHoras">0h</p>
-      </div>
-      <div>
-        <h3>Total Horas Extras</h3>
-        <p id="totalExtras" class="horas-extra">0h</p>
-      </div>
-    </div>
-    
-    <div class="nav-buttons">
-      <a href="index.html" class="link-button">🏠 Volver al Inicio</a>
+    <div>
+      <label>Período:</label>
+      <button class="btn-periodo activo" data-periodo="dia">Día</button>
+      <button class="btn-periodo" data-periodo="semana">Semana</button>
+      <button class="btn-periodo" data-periodo="quincena">Quincena</button>
+      <button class="btn-periodo" data-periodo="mes">Mes</button>
     </div>
   </div>
 
-  <script src="app.js"></script>
-  <script>
-    setInterval(() => {
-      const ahora = new Date();
-      document.getElementById('clock').textContent = ahora.toLocaleTimeString('es-ES');
-    }, 1000);
+  <div id="registroContainer">Cargando registros...</div>
+
+  <div class="totales">
+    <span>Total Registros: <span id="totalRegistros">0</span></span>
+    <span id="horasTrabajadasCont" style="display:none;">
+      Horas Trabajadas: <span id="totalHoras">0</span> h
+    </span>
+    <span>Horas Extras: <span id="totalExtras">0</span> h</span>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBfDHo3vViwVMDfyPChyQyn0r4xih7O0jw",
+      authDomain: "registro-horario-brimez.firebaseapp.com",
+      projectId: "registro-horario-brimez",
+      storageBucket: "registro-horario-brimez.appspot.com",
+      messagingSenderId: "1087754167148",
+      appId: "1:1087754167148:web:db585aca2bb76c15ba4949",
+      measurementId: "G-3S4NSSCGXW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     let periodoActual = 'dia';
     let empleadoActual = 'todos';
-    let datosEmpleados = {};
 
-    document.addEventListener('DOMContentLoaded', () => {
-      datosEmpleados = JSON.parse(localStorage.getItem('empleadosCompletos')) || {};
-      inicializarFiltroEmpleados();
+    const clock = document.getElementById('clock');
+    setInterval(() => {
+      clock.textContent = new Date().toLocaleTimeString('es-ES');
+    }, 1000);
 
-      document.getElementById('filtroEmpleado').addEventListener('change', (e) => {
-        empleadoActual = e.target.value;
-        cargarRegistros();
-      });
-
-      document.querySelectorAll('.filtro-periodo button').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.filtro-periodo button').forEach(b => b.classList.remove('activo'));
-          btn.classList.add('activo');
-          periodoActual = btn.dataset.periodo;
-          cargarRegistros();
-        });
-      });
-
-      cargarRegistros();
+    document.getElementById('filtroEmpleado').addEventListener('change', async e => {
+      empleadoActual = e.target.value;
+      await cargarRegistros();
+      actualizarVisibilidadHoras();
     });
 
-    function inicializarFiltroEmpleados() {
-      const selectEmpleado = document.getElementById('filtroEmpleado');
-      const registros = JSON.parse(localStorage.getItem('registros')) || [];
-      const empleadosUnicos = new Set();
-
-      registros.forEach(registro => {
-        if (registro.nombre) {
-          empleadosUnicos.add(registro.nombre);
-        }
+    document.querySelectorAll('.btn-periodo').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        document.querySelectorAll('.btn-periodo').forEach(b => b.classList.remove('activo'));
+        btn.classList.add('activo');
+        periodoActual = btn.dataset.periodo;
+        await cargarRegistros();
+        actualizarVisibilidadHoras();
       });
+    });
 
-      empleadosUnicos.forEach(nombre => {
-        const option = document.createElement('option');
-        option.value = nombre;
-        option.textContent = nombre;
-        selectEmpleado.appendChild(option);
+    async function cargarEmpleados() {
+      const sel = document.getElementById('filtroEmpleado');
+      const snap = await getDocs(collection(db, "empleados"));
+      snap.forEach(doc => {
+        const emp = doc.data();
+        const opt = document.createElement('option');
+        opt.value = doc.id;
+        opt.textContent = emp.nombre;
+        sel.appendChild(opt);
       });
     }
 
-    function cargarRegistros() {
-      const registros = JSON.parse(localStorage.getItem('registros')) || [];
-      const container = document.getElementById('registroContainer');
-      const fechaLimite = obtenerFechaLimite(periodoActual);
-      let registrosFiltrados = registros.filter(registro => {
-        const fechaRegistro = registro.fechaCompleta ? new Date(registro.fechaCompleta) : new Date();
-        return fechaRegistro >= fechaLimite;
+    function obtenerFechaLimite() {
+      const hoy = new Date();
+      switch (periodoActual) {
+        case 'semana': hoy.setDate(hoy.getDate() - 7); break;
+        case 'quincena': hoy.setDate(hoy.getDate() - 15); break;
+        case 'mes': hoy.setDate(hoy.getDate() - 30); break;
+        default: hoy.setHours(0, 0, 0, 0); break;
+      }
+      return hoy.toISOString().slice(0, 10);
+    }
+
+    function formatearHorasDecimal(decimal) {
+      const horas = Math.floor(decimal);
+      const minutos = Math.round((decimal - horas) * 60);
+      return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+    }
+
+    async function cargarRegistros() {
+      const contenedor = document.getElementById('registroContainer');
+      contenedor.innerHTML = "Cargando...";
+
+      const snap = await getDocs(query(collection(db, "registros_diarios"), orderBy("fecha", "desc")));
+      const limite = obtenerFechaLimite();
+      let totalHoras = 0, totalExtras = 0, totalRegistros = 0;
+
+      let registrosPorEmpleado = new Map();
+
+      snap.forEach(doc => {
+        const r = doc.data();
+        if (r.fecha < limite) return;
+        if (empleadoActual !== 'todos' && r.id !== empleadoActual) return;
+
+        if (!registrosPorEmpleado.has(r.nombre)) {
+          registrosPorEmpleado.set(r.nombre, []);
+        }
+        registrosPorEmpleado.get(r.nombre).push(r);
       });
 
-      if (empleadoActual !== 'todos') {
-        registrosFiltrados = registrosFiltrados.filter(registro => registro.nombre === empleadoActual);
-      }
+      let html = '';
 
-      if (registrosFiltrados.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12" y2="16"></line>
-            </svg>
-            <h3>No hay registros para el período seleccionado</h3>
-            <p>Prueba con otro período o empleado.</p>
-          </div>
-        `;
-        actualizarTotales(0, 0, 0);
-        return;
-      }
-
-      const registrosProcesados = procesarRegistros(registrosFiltrados);
-      let html = `
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Fecha</th>
-              <th>Entrada</th>
-              <th>Salida</th>
-              <th>Horas Trabajadas</th>
-              <th>Horas Extras</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      let totalRegistros = 0;
-      let totalHorasTrabajadas = 0;
-      let totalHorasExtras = 0;
-
-      registrosProcesados.forEach(registro => {
-        totalRegistros++;
-        totalHorasTrabajadas += registro.horasTrabajadas || 0;
-        totalHorasExtras += registro.horasExtras || 0;
-
+      registrosPorEmpleado.forEach((registros, nombre) => {
+        html += `<h3>👤 ${nombre}</h3>`;
         html += `
-          <tr>
-            <td>${registro.id}</td>
-            <td>${registro.nombre}</td>
-            <td>${registro.fecha}</td>
-            <td>${registro.horaEntrada || '-'}</td>
-            <td>${registro.horaSalida || '-'}</td>
-            <td>${formatearHoras(registro.horasTrabajadas)}</td>
-            <td>${formatearHoras(registro.horasExtras)}</td>
-          </tr>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Nombre</th><th>Fecha</th>
+                <th>Entrada</th><th>Salida</th>
+                <th>Horas</th><th>Horas Extras</th>
+              </tr>
+            </thead><tbody>
         `;
-      });
 
-      html += `</tbody></table>`;
-      container.innerHTML = html;
-      actualizarTotales(totalRegistros, totalHorasTrabajadas, totalHorasExtras);
+        registros.forEach(r => {
+          let entrada = r.horaEntrada || '-';
+          let salida = r.horaSalida || '-';
+          let horas = 0, extras = 0;
 
-      // MOSTRAR u OCULTAR bloque "Total Horas Trabajadas"
-      const totalHorasContainer = document.getElementById('totalHorasContainer');
-      if (empleadoActual === 'todos') {
-        totalHorasContainer.style.display = 'none';
-      } else {
-        totalHorasContainer.style.display = 'block';
-      }
-    }
+          if (entrada !== '-' && salida !== '-') {
+            const t1 = new Date(`1970-01-01T${entrada}`);
+            const t2 = new Date(`1970-01-01T${salida}`);
+            let diff = (t2 - t1) / 3600000;
+            diff = Math.max(0, diff - 2); // Descuento 2 horas
 
-    function procesarRegistros(registros) {
-      const registrosPorEmpleadoDia = {};
-      registros.forEach(registro => {
-        if (!registro.fechaCompleta) return;
-        const fecha = new Date(registro.fechaCompleta).toLocaleDateString('es-ES');
-        const id = registro.id;
-        const clave = `${id}-${fecha}`;
-
-        if (!registrosPorEmpleadoDia[clave]) {
-          registrosPorEmpleadoDia[clave] = {
-            id: id,
-            nombre: registro.nombre,
-            fecha: fecha,
-            entradas: [],
-            salidas: []
-          };
-        }
-
-        if (registro.accion === 'Entrada') {
-          registrosPorEmpleadoDia[clave].entradas.push({ hora: registro.hora, fechaCompleta: registro.fechaCompleta });
-        } else if (registro.accion === 'Salida') {
-          registrosPorEmpleadoDia[clave].salidas.push({ hora: registro.hora, fechaCompleta: registro.fechaCompleta });
-        }
-      });
-
-      const resultados = [];
-      Object.values(registrosPorEmpleadoDia).forEach(grupo => {
-        grupo.entradas.sort((a, b) => new Date(a.fechaCompleta) - new Date(b.fechaCompleta));
-        grupo.salidas.sort((a, b) => new Date(a.fechaCompleta) - new Date(b.fechaCompleta));
-
-        const entrada = grupo.entradas[0] || null;
-        const salida = grupo.salidas[grupo.salidas.length - 1] || null;
-
-        if (entrada && salida) {
-          const resultado = {
-            id: grupo.id,
-            nombre: grupo.nombre,
-            fecha: grupo.fecha,
-            horaEntrada: entrada.hora,
-            horaSalida: salida.hora
-          };
-
-          const datosEmpleado = datosEmpleados[grupo.id];
-          if (datosEmpleado) {
-            const { horasTrabajadas, horasExtras } = calcularHoras(
-              entrada.fechaCompleta, salida.fechaCompleta, datosEmpleado
-            );
-            resultado.horasTrabajadas = horasTrabajadas;
-            resultado.horasExtras = horasExtras;
+            horas = diff;
+            extras = horas > 8 ? horas - 8 : 0;
           }
 
-          resultados.push(resultado);
-        }
+          totalHoras += horas;
+          totalExtras += extras;
+          totalRegistros++;
+
+          html += `<tr>
+            <td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td>
+            <td>${entrada}</td><td>${salida}</td>
+            <td>${formatearHorasDecimal(horas)}</td>
+            <td>${formatearHorasDecimal(extras)}</td>
+          </tr>`;
+        });
+
+        html += `</tbody></table>`;
       });
 
-      return resultados;
+      contenedor.innerHTML = html;
+      document.getElementById("totalRegistros").textContent = totalRegistros;
+      document.getElementById("totalHoras").textContent = formatearHorasDecimal(totalHoras);
+      document.getElementById("totalExtras").textContent = formatearHorasDecimal(totalExtras);
     }
 
-    function calcularHoras(entradaStr, salidaStr, datosEmpleado) {
-      const entrada = new Date(entradaStr);
-      const salida = new Date(salidaStr);
-      let tiempoTotal = salida - entrada;
-      let horasTrabajadas = tiempoTotal / (1000 * 60 * 60);
-      if (horasTrabajadas > 8) horasTrabajadas -= 2;
-      horasTrabajadas = Math.max(0, horasTrabajadas);
-      let horasExtras = 0;
-
-      if (datosEmpleado) {
-        const horarioInicio = datosEmpleado.horaEntrada || datosEmpleado.horarioEntrada;
-        const horarioFin = datosEmpleado.horaSalida || datosEmpleado.horarioSalida;
-        if (horarioInicio && horarioFin) {
-          const fechaBase = new Date(entrada);
-          fechaBase.setHours(0, 0, 0, 0);
-          const [hI, mI] = horarioInicio.split(':').map(Number);
-          const [hF, mF] = horarioFin.split(':').map(Number);
-          const inicioLaboral = new Date(fechaBase);
-          const finLaboral = new Date(fechaBase);
-          inicioLaboral.setHours(hI, mI, 0);
-          finLaboral.setHours(hF, mF, 0);
-
-          if (entrada < inicioLaboral) horasExtras += (inicioLaboral - entrada) / (1000 * 60 * 60);
-          if (salida > finLaboral) horasExtras += (salida - finLaboral) / (1000 * 60 * 60);
-        }
+    function actualizarVisibilidadHoras() {
+      const horasCont = document.getElementById('horasTrabajadasCont');
+      if (empleadoActual === 'todos') {
+        horasCont.style.display = 'none';
+      } else {
+        horasCont.style.display = 'inline';
       }
-
-      return { horasTrabajadas, horasExtras };
     }
 
-    function obtenerFechaLimite(periodo) {
-      const ahora = new Date();
-      const fechaLimite = new Date(ahora);
-      switch (periodo) {
-        case 'dia': fechaLimite.setHours(0, 0, 0, 0); break;
-        case 'semana': fechaLimite.setDate(ahora.getDate() - 7); break;
-        case 'quincena': fechaLimite.setDate(ahora.getDate() - 15); break;
-        case 'mes': fechaLimite.setDate(ahora.getDate() - 30); break;
-      }
-      return fechaLimite;
-    }
-
-    function formatearHoras(horas) {
-      if (horas === undefined || horas === null) return '-';
-      horas = Math.round(horas * 100) / 100;
-      return `${horas.toFixed(2)} h`;
-    }
-
-    function actualizarTotales(registros, horas, extras) {
-      document.getElementById('totalRegistros').textContent = registros;
-      document.getElementById('totalHoras').textContent = formatearHoras(horas);
-      document.getElementById('totalExtras').textContent = formatearHoras(extras);
-    }
+    document.addEventListener("DOMContentLoaded", async () => {
+      await cargarEmpleados();
+      await cargarRegistros();
+      actualizarVisibilidadHoras();
+    });
   </script>
 </body>
 </html>

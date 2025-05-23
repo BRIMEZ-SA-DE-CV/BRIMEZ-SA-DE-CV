@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gestión de Usuarios</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" href="apple-touch-icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>Gestión de Usuarios - BRIMEZ</title>
   <link rel="stylesheet" href="styles.css" />
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
 </head>
 <body>
   <h1>Gestión de Usuarios</h1>
@@ -54,6 +61,26 @@
     <a href="index.html">⬅ Volver al registro</a>
   </p>
 
+  <!-- Script de configuración de Firebase -->
+  <script>
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBfDHo3vViwVMDfyPChyQyn0r4xih7O0jw",
+      authDomain: "registro-horario-brimez.firebaseapp.com",
+      projectId: "registro-horario-brimez",
+      storageBucket: "registro-horario-brimez.firebasestorage.app",
+      messagingSenderId: "1087754167148",
+      appId: "1:1087754167148:web:db585aca2bb76c15ba4949",
+      measurementId: "G-3S4NSSCGXW"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    firebase.analytics();
+  </script>
+  
+  <!-- Script principal -->
   <script src="usuarios.js"></script>
 </body>
 </html>

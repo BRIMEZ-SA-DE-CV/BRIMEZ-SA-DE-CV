@@ -11,8 +11,8 @@ app.use(express.json());
 const connection = mysql.createConnection({
   host: 'localhost',      // Servidor MySQL (local)
   user: 'root',           // Usuario de MySQL (normalmente root para desarrollo)
-  password: 'tu_contraseña', // IMPORTANTE: Cambia esto por tu contraseña real
-  database: 'web2_db'     // Nombre de la base de datos que creaste
+  password: 'Aruiz4161', // IMPORTANTE: Cambia esto por tu contraseña real
+  database: 'basedatos'     // Nombre de la base de datos que creaste
 });
 
 // Conectar a MySQL

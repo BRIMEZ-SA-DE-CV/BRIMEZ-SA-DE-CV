@@ -1,46 +1,86 @@
 // registro.js - Lógica para registro de entradas y salidas
 
-// Inicializar registros si no existen
+// Inicializar registros
 function inicializarRegistros() {
-  if (!localStorage.getItem("registros")) {
-    localStorage.setItem("registros", JSON.stringify([]));
-  }
+  // Iniciar el reloj
+  iniciarReloj();
+  // Cargar registros actuales
   actualizarTablaRegistros();
+}
+
+// Función para iniciar el reloj en tiempo real
+function iniciarReloj() {
+  setInterval(() => {
+    const ahora = new Date();
+    const elementoReloj = document.getElementById('clock');
+    if (elementoReloj) {
+      elementoReloj.textContent = ahora.toLocaleTimeString('es-ES');
+    }
+  }, 1000);
 }
 
 // Función para buscar empleado por ID
 function buscarEmpleado() {
   const idEmpleado = document.getElementById("idEmpleado").value.trim();
   const nombreDisplay = document.getElementById("nombreEmpleado");
+  const horarioInfo = document.getElementById("horarioInfo");
+  
+  // Limpiar información previa
+  nombreDisplay.textContent = "";
+  horarioInfo.textContent = "";
   
   if (!idEmpleado) {
-    nombreDisplay.textContent = "";
     return;
   }
   
-  const nombre = appUtils.obtenerNombreEmpleado(idEmpleado);
-  nombreDisplay.textContent = nombre;
+  // Mostrar indicador de carga
+  nombreDisplay.textContent = "Buscando...";
   
-  // Determinar última acción para mostrar el botón correcto
-  const ultimaAccion = obtenerUltimaAccion(idEmpleado);
-  actualizarBotonRegistro(ultimaAccion);
+  // Buscar empleado en Firebase
+  db.collection("empleados").doc(idEmpleado).get()
+    .then((doc) => {
+      if (doc.exists) {
+        const empleado = doc.data();
+        nombreDisplay.textContent = empleado.nombre;
+        horarioInfo.textContent = `Horario: ${empleado.horarioEntrada} - ${empleado.horarioSalida} | Comida: ${empleado.comidaInicio} - ${empleado.comidaFin}`;
+        
+        // Determinar última acción para mostrar el botón correcto
+        obtenerUltimaAccion(idEmpleado);
+      } else {
+        nombreDisplay.textContent = "Empleado no encontrado";
+        horarioInfo.textContent = "";
+        actualizarBotonRegistro("Entrada"); // Por defecto
+      }
+    })
+    .catch((error) => {
+      console.error("Error al buscar empleado:", error);
+      nombreDisplay.textContent = "Error al buscar empleado";
+      horarioInfo.textContent = "";
+    });
 }
 
 // Obtener la última acción del empleado (entrada o salida)
 function obtenerUltimaAccion(idEmpleado) {
-  const registros = JSON.parse(localStorage.getItem("registros")) || [];
-  
-  // Filtrar registros del empleado y ordenar por fecha (más reciente primero)
-  const registrosEmpleado = registros
-    .filter(reg => reg.idEmpleado === idEmpleado)
-    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
-  // Si no hay registros o el último es salida, la siguiente acción es entrada
-  if (registrosEmpleado.length === 0 || registrosEmpleado[0].accion === "Salida") {
-    return "Entrada";
-  } else {
-    return "Salida";
-  }
+  // Consultar en Firebase la última acción del empleado
+  db.collection("registros")
+    .where("id", "==", idEmpleado)
+    .orderBy("fechaCompleta", "desc")
+    .limit(1)
+    .get()
+    .then((snapshot) => {
+      let accion = "Entrada"; // Por defecto, la primera acción es entrada
+      
+      if (!snapshot.empty) {
+        const ultimoRegistro = snapshot.docs[0].data();
+        accion = ultimoRegistro.accion === "Entrada" ? "Salida" : "Entrada";
+      }
+      
+      actualizarBotonRegistro(accion);
+    })
+    .catch((error) => {
+      console.error("Error al obtener última acción:", error);
+      actualizarBotonRegistro("Entrada"); // Por defecto en caso de error
+    });
 }
 
 // Actualizar el botón de registro según la acción
@@ -61,60 +101,106 @@ function registrarAccion() {
   const idEmpleado = document.getElementById("idEmpleado").value.trim();
   const nombre = document.getElementById("nombreEmpleado").textContent;
   
-  if (!idEmpleado || nombre === "Empleado no encontrado") {
+  if (!idEmpleado || nombre === "Empleado no encontrado" || nombre === "Error al buscar empleado" || nombre === "Buscando...") {
     alert("Ingrese un ID de empleado válido");
     return;
   }
   
-  const accion = obtenerUltimaAccion(idEmpleado);
-  const timestamp = new Date().toISOString();
+  // Obtener la acción a registrar
+  const accion = document.getElementById("btnRegistrar").textContent.includes("Entrada") ? "Entrada" : "Salida";
+  
+  // Crear objeto de fecha y hora
+  const ahora = new Date();
+  const fecha = ahora.toLocaleDateString('es-ES');
+  const hora = ahora.toLocaleTimeString('es-ES');
   
   const nuevoRegistro = {
-    idEmpleado,
-    nombre,
-    accion,
-    timestamp
+    id: idEmpleado,
+    nombre: nombre,
+    fecha: fecha,
+    hora: hora,
+    accion: accion,
+    fechaCompleta: ahora.toISOString()
   };
   
-  // Guardar registro
-  const registros = JSON.parse(localStorage.getItem("registros")) || [];
-  registros.push(nuevoRegistro);
-  localStorage.setItem("registros", JSON.stringify(registros));
+  // Mostrar indicador de carga
+  const boton = document.getElementById("btnRegistrar");
+  const textoOriginal = boton.textContent;
+  boton.textContent = "Procesando...";
+  boton.disabled = true;
   
-  // Actualizar interfaz
-  document.getElementById("idEmpleado").value = "";
-  document.getElementById("nombreEmpleado").textContent = "";
-  actualizarTablaRegistros();
-  
-  alert(`${accion} registrada correctamente para ${nombre}`);
+  // Guardar registro en Firebase
+  db.collection("registros").add(nuevoRegistro)
+    .then(() => {
+      // Actualizar interfaz
+      document.getElementById("idEmpleado").value = "";
+      document.getElementById("nombreEmpleado").textContent = "";
+      document.getElementById("horarioInfo").textContent = "";
+      
+      // Restaurar botón
+      boton.textContent = textoOriginal;
+      boton.disabled = false;
+      
+      // Actualizar tabla
+      actualizarTablaRegistros();
+      
+      // Mostrar mensaje de éxito
+      alert(`${accion} registrada correctamente para ${nombre} a las ${hora}`);
+    })
+    .catch((error) => {
+      console.error("Error al registrar acción:", error);
+      alert("Error al registrar acción: " + error.message);
+      
+      // Restaurar botón
+      boton.textContent = textoOriginal;
+      boton.disabled = false;
+    });
 }
 
 // Actualizar tabla de registros diarios
 function actualizarTablaRegistros() {
-  const registros = JSON.parse(localStorage.getItem("registros")) || [];
   const tablaBody = document.getElementById("tablaRegistrosBody");
+  if (!tablaBody) return;
+  
   tablaBody.innerHTML = "";
   
+  // Mostrar indicador de carga
+  tablaBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Cargando registros...</td></tr>`;
+  
   // Filtrar registros del día actual
-  const hoy = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-  const registrosHoy = registros.filter(reg => reg.timestamp.startsWith(hoy));
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
   
-  // Ordenar por hora (más reciente primero)
-  registrosHoy.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  
-  // Mostrar en la tabla
-  registrosHoy.forEach(reg => {
-    const fila = document.createElement("tr");
-    
-    fila.innerHTML = `
-      <td>${reg.idEmpleado}</td>
-      <td>${reg.nombre}</td>
-      <td>${reg.accion}</td>
-      <td>${appUtils.formatearHora(reg.timestamp)}</td>
-    `;
-    
-    tablaBody.appendChild(fila);
-  });
+  db.collection("registros")
+    .where("fechaCompleta", ">=", hoy.toISOString())
+    .orderBy("fechaCompleta", "desc")
+    .get()
+    .then((snapshot) => {
+      tablaBody.innerHTML = ""; // Limpiar el indicador de carga
+      
+      if (snapshot.empty) {
+        tablaBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No hay registros para hoy</td></tr>`;
+        return;
+      }
+      
+      snapshot.forEach((doc) => {
+        const reg = doc.data();
+        const fila = document.createElement("tr");
+        
+        fila.innerHTML = `
+          <td>${reg.id}</td>
+          <td>${reg.nombre}</td>
+          <td>${reg.accion}</td>
+          <td>${reg.hora}</td>
+        `;
+        
+        tablaBody.appendChild(fila);
+      });
+    })
+    .catch((error) => {
+      console.error("Error al cargar registros:", error);
+      tablaBody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Error al cargar registros: ${error.message}</td></tr>`;
+    });
 }
 
 // Event listeners
@@ -122,8 +208,14 @@ window.addEventListener("DOMContentLoaded", () => {
   inicializarRegistros();
   
   // Buscar empleado al ingresar ID
-  document.getElementById("idEmpleado").addEventListener("input", buscarEmpleado);
+  const inputId = document.getElementById("idEmpleado");
+  if (inputId) {
+    inputId.addEventListener("input", buscarEmpleado);
+  }
   
   // Botón de registro
-  document.getElementById("btnRegistrar").addEventListener("click", registrarAccion);
+  const btnRegistrar = document.getElementById("btnRegistrar");
+  if (btnRegistrar) {
+    btnRegistrar.addEventListener("click", registrarAccion);
+  }
 });

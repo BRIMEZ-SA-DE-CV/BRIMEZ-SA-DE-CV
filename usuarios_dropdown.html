@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Lista de Usuarios Registrados</title>
+</head>
+<body>
+  <h2>Selecciona un usuario</h2>
+  <select id="filtroEmpleado">
+    <option value="">Cargando usuarios...</option>
+  </select>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    function cargarregistros_diarios() {
+      const selectEmpleado = document.getElementById('filtroEmpleado');
+      selectEmpleado.innerHTML = '<option value="">Cargando usuarios...</option>';
+      db.collection("empleados") // <-- CAMBIA aquí "registros_diarios" por "empleados"
+        .orderBy("nombre")
+        .get()
+        .then((snapshot) => {
+          selectEmpleado.innerHTML = '<option value="">Seleccione un usuario</option>';
+          if (snapshot.empty) {
+            selectEmpleado.innerHTML = '<option value="">No hay usuarios registrados</option>';
+            return;
+          }
+          snapshot.forEach(doc => {
+            const empleado = doc.data();
+            const option = document.createElement('option');
+            option.value = doc.id;
+            option.textContent = `${empleado.nombre} (ID: ${doc.id})`; // Puedes personalizar el texto aquí
+            selectEmpleado.appendChild(option);
+          });
+        })
+        .catch(error => {
+          console.error("Error al cargar usuarios:", error);
+          selectEmpleado.innerHTML = '<option value="">Error al cargar usuarios</option>';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarregistros_diarios);
+  </script>
+</body>
+</html>

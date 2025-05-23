@@ -9,11 +9,7 @@ function verificarCredenciales(e) {
   const usuario = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
   
-  if (!usuario || !password) {
-    app.mostrarNotificacion("Complete todos los campos", "error");
-    return;
-  }
-  
+  // ❌ Credenciales hardcodeadas
   if (app.verificarAdmin(usuario, password)) {
     // Guardar estado de autenticación
     sessionStorage.setItem("adminAutenticado", "true");
@@ -23,4 +19,7 @@ function verificarCredenciales(e) {
   } else {
     app.mostrarNotificacion("Credenciales incorrectas", "error");
   }
+  
+  // ✅ Implementar Firebase Authentication
+  import { signInWithEmailAndPassword } from "firebase/auth";
 }
