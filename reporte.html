@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -73,6 +73,19 @@
       justify-content: space-around;
       font-weight: bold;
     }
+    #btnLimpiar {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin: 10px 20px;
+      padding: 8px 12px;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+    #btnLimpiar:hover {
+      background-color: #c0392b;
+    }
   </style>
 </head>
 <body>
@@ -104,6 +117,9 @@
     </div>
   </div>
 
+  <!-- Botón para limpiar registros del día -->
+  <button id="btnLimpiar" title="Eliminar registros del día actual">🗑️ Limpiar registros del día</button>
+
   <div id="registroContainer">Cargando registros...</div>
 
   <div class="totales">
@@ -116,7 +132,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import {
+      getFirestore, collection, getDocs, query, orderBy, deleteDoc, doc, where, getDocsFromCache, writeBatch
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBfDHo3vViwVMDfyPChyQyn0r4xih7O0jw",
@@ -155,9 +173,14 @@
       });
     });
 
+    // Función para cargar empleados al filtro
     async function cargarEmpleados() {
       const sel = document.getElementById('filtroEmpleado');
       const snap = await getDocs(collection(db, "empleados"));
+
+      // Limpiar opciones excepto "Todos"
+      sel.querySelectorAll('option:not([value="todos"])').forEach(opt => opt.remove());
+
       snap.forEach(doc => {
         const emp = doc.data();
         const opt = document.createElement('option');
@@ -167,6 +190,7 @@
       });
     }
 
+    // Obtiene fecha límite para filtrar según periodo
     function obtenerFechaLimite() {
       const hoy = new Date();
       switch (periodoActual) {
@@ -178,12 +202,14 @@
       return hoy.toISOString().slice(0, 10);
     }
 
+    // Formatea horas en decimal a hh:mm
     function formatearHorasDecimal(decimal) {
       const horas = Math.floor(decimal);
       const minutos = Math.round((decimal - horas) * 60);
       return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
     }
 
+    // Carga y muestra registros filtrados
     async function cargarRegistros() {
       const contenedor = document.getElementById('registroContainer');
       contenedor.innerHTML = "Cargando...";
@@ -197,18 +223,23 @@
       snap.forEach(doc => {
         const r = doc.data();
         if (r.fecha < limite) return;
+
         if (empleadoActual !== 'todos' && r.id !== empleadoActual) return;
 
-        if (!registrosPorEmpleado.has(r.nombre)) {
-          registrosPorEmpleado.set(r.nombre, []);
+        const clave = `${r.id}_${r.nombre}`;
+
+        if (!registrosPorEmpleado.has(clave)) {
+          registrosPorEmpleado.set(clave, []);
         }
-        registrosPorEmpleado.get(r.nombre).push(r);
+        registrosPorEmpleado.get(clave).push(r);
       });
 
       let html = '';
 
-      registrosPorEmpleado.forEach((registros, nombre) => {
-        html += `<h3>👤 ${nombre}</h3>`;
+      registrosPorEmpleado.forEach((registros, clave) => {
+        const [id, nombre] = clave.split('_');
+
+        html += `<h3>👤 ${nombre} (ID: ${id})</h3>`;
         html += `
           <table>
             <thead>
@@ -229,7 +260,7 @@
             const t1 = new Date(`1970-01-01T${entrada}`);
             const t2 = new Date(`1970-01-01T${salida}`);
             let diff = (t2 - t1) / 3600000;
-            diff = Math.max(0, diff - 2); // Descuento 2 horas
+            diff = Math.max(0, diff - 2);
 
             horas = diff;
             extras = horas > 8 ? horas - 8 : 0;
@@ -256,6 +287,7 @@
       document.getElementById("totalExtras").textContent = formatearHorasDecimal(totalExtras);
     }
 
+    // Actualiza visibilidad de horas trabajadas (solo si empleado es individual)
     function actualizarVisibilidadHoras() {
       const horasCont = document.getElementById('horasTrabajadasCont');
       if (empleadoActual === 'todos') {
@@ -265,11 +297,41 @@
       }
     }
 
+    // Función para eliminar registros del día actual
+    async function limpiarRegistrosDia() {
+      if (!confirm('¿Seguro que quieres eliminar TODOS los registros del día de hoy? Esta acción no se puede deshacer.')) return;
+
+      const hoyStr = new Date().toISOString().slice(0, 10);
+      const registrosRef = collection(db, "registros_diarios");
+      const q = query(registrosRef, orderBy("fecha"));
+      const snap = await getDocs(q);
+
+      const batch = writeBatch(db);
+      let eliminados = 0;
+
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.fecha === hoyStr) {
+          batch.delete(doc(db, "registros_diarios", docSnap.id));
+          eliminados++;
+        }
+      });
+
+      if (eliminados === 0) {
+        alert("No hay registros del día de hoy para eliminar.");
+        return;
+      }
+
+      await batch.commit();
+      alert(`Se eliminaron ${eliminados} registros del día de hoy.`);
+      await cargarRegistros();
+    }
+
+    document.getElementById('btnLimpiar').addEventListener('click', limpiarRegistrosDia);
+
     document.addEventListener("DOMContentLoaded", async () => {
       await cargarEmpleados();
       await cargarRegistros();
       actualizarVisibilidadHoras();
     });
   </script>
-</body>
-</html>

@@ -1,13 +1,119 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="apple-touch-icon.png" type="image/png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <title>Gestión de Usuarios - BRIMEZ</title>
-  <link rel="stylesheet" href="styles.css" />
-  
+
+  <!-- ✅ CSS RESPONSIVO -->
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background-color: #f0f0f0;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .card {
+      background-color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .buttons {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .btn-agregar {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn-agregar:hover {
+      background-color: #0056b3;
+    }
+
+    .registro {
+      overflow-x: auto;
+      margin-top: 2rem;
+      max-width: 100%;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    a {
+      display: block;
+      text-align: center;
+      margin-top: 2rem;
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* ✅ Media Queries para dispositivos pequeños */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      input, .btn-agregar {
+        font-size: 0.95rem;
+      }
+
+      table {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -19,18 +125,19 @@
   <div class="card">
     <label for="newId">ID del empleado:</label>
     <input type="text" id="newId" placeholder="Ej. 1234" />
+
     <label for="newName">Nombre del empleado:</label>
     <input type="text" id="newName" placeholder="Ej. Juan Pérez" />
-    
+
     <label for="horarioEntrada">Hora de entrada:</label>
     <input type="text" id="horarioEntrada" placeholder="Ej. 08:00" value="08:00" />
-    
+
     <label for="horarioSalida">Hora de salida:</label>
     <input type="text" id="horarioSalida" placeholder="Ej. 17:00" value="17:00" />
-    
+
     <label for="comidaInicio">Inicio de comida:</label>
     <input type="text" id="comidaInicio" placeholder="Ej. 13:00" value="13:00" />
-    
+
     <label for="comidaFin">Fin de comida:</label>
     <input type="text" id="comidaFin" placeholder="Ej. 14:00" value="14:00" />
 
@@ -56,14 +163,11 @@
       </tbody>
     </table>
   </div>
-  
-  <p>
-    <a href="index.html">⬅ Volver al registro</a>
-  </p>
 
-  <!-- Script de configuración de Firebase -->
+  <a href="index.html">⬅ Volver al registro</a>
+
+  <!-- Firebase Config -->
   <script>
-    // Configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBfDHo3vViwVMDfyPChyQyn0r4xih7O0jw",
       authDomain: "registro-horario-brimez.firebaseapp.com",
@@ -74,14 +178,12 @@
       measurementId: "G-3S4NSSCGXW"
     };
 
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     firebase.analytics();
   </script>
-  
+
   <!-- Script principal -->
   <script src="usuarios.js"></script>
 </body>
 </html>
-
