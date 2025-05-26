@@ -348,11 +348,25 @@
     <div class="nav-buttons">
       <a href="usuarios.html" class="link-button">➕ Gestionar usuarios</a>
       <a href="reporte.html" class="link-button">📊 Ver reporte</a>
-      <button onclick="reiniciarRegistros()" class="link-button" style="background-color: #dc3545;">🗑️ Reinicio</button>
+      <button class="link-button" style="background-color: #dc3545;" id="btnReinicio">🗑️ Reinicio</button>
     </div>
   </div>
 
   <div id="toastContainer"></div>
+
+  <!-- Modal de autenticación profesional -->
+  <div id="authModal" class="modal-auth" style="display:none;">
+    <div class="modal-auth-content">
+      <h2>Autenticación requerida</h2>
+      <input type="text" id="authUser" placeholder="Usuario" autocomplete="username" />
+      <input type="password" id="authPass" placeholder="Contraseña" autocomplete="current-password" />
+      <div id="authError" class="auth-error"></div>
+      <div class="modal-auth-actions">
+        <button id="authAccept">Ingresar</button>
+        <button id="authCancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -907,6 +921,79 @@
   <script src="app.js"></script>
   <script src="script.js"></script>
   <script src="registros_diarios.js"></script>
-  
+
+  <script>
+// --- Modal de autenticación profesional ---
+let accionPendiente = null;
+function mostrarAuthModal(callbackExitoso) {
+  accionPendiente = callbackExitoso;
+  document.getElementById('authUser').value = '';
+  document.getElementById('authPass').value = '';
+  document.getElementById('authError').textContent = '';
+  document.getElementById('authModal').style.display = 'flex';
+  document.getElementById('authUser').focus();
+}
+function cerrarAuthModal() {
+  document.getElementById('authModal').style.display = 'none';
+}
+function verificarCredenciales() {
+  const usuario = document.getElementById('authUser').value.trim();
+  const contrasena = document.getElementById('authPass').value;
+  if (usuario !== 'brimezadmin') {
+    document.getElementById('authError').textContent = 'Usuario incorrecto.';
+    return;
+  }
+  if (contrasena !== 'brimez1') {
+    document.getElementById('authError').textContent = 'Contraseña incorrecta.';
+    return;
+  }
+  cerrarAuthModal();
+  if (typeof accionPendiente === 'function') accionPendiente();
+}
+document.getElementById('authAccept').onclick = verificarCredenciales;
+document.getElementById('authCancel').onclick = cerrarAuthModal;
+document.getElementById('authPass').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') verificarCredenciales();
+});
+document.getElementById('authUser').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('authPass').focus();
+});
+// Dentro del bloque de autenticación profesional
+function flujoReinicioSeguro() {
+  mostrarAuthModal(() => {
+    if (confirm('¿Está seguro de reiniciar todos los registros? Esta acción no se puede deshacer.')) {
+      reiniciarRegistros();
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btnUsuarios = document.querySelector('a[href="usuarios.html"]');
+  if (btnUsuarios) {
+    btnUsuarios.addEventListener('click', function(e) {
+      e.preventDefault();
+      mostrarAuthModal(() => {
+        window.location.href = 'usuarios.html';
+      });
+    });
+  }
+  const btnReporte = document.querySelector('a[href="reporte.html"]');
+  if (btnReporte) {
+    btnReporte.addEventListener('click', function(e) {
+      e.preventDefault();
+      mostrarAuthModal(() => {
+        window.location.href = 'reporte.html';
+      });
+    });
+  }
+  const btnReinicio = document.getElementById('btnReinicio');
+  if (btnReinicio) {
+    btnReinicio.addEventListener('click', function(e) {
+      e.preventDefault();
+      flujoReinicioSeguro();
+    });
+  }
+});
+</script>
 </body>
 </html>

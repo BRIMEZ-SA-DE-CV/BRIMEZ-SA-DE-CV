@@ -87,6 +87,10 @@
       background-color: #c0392b;
     }
   </style>
+
+<link rel="icon" href="apple-touch-icon.png" type="image/png">
+
+
 </head>
 <body>
 
@@ -335,3 +339,36 @@
       actualizarVisibilidadHoras();
     });
   </script>
+<!-- Modal de Autenticación Profesional -->
+<div id="modalAuth" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(44,62,80,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:#fff;padding:30px 25px 20px 25px;border-radius:10px;box-shadow:0 2px 16px #222;width:320px;max-width:90vw;text-align:center;">
+    <h2 style="margin-bottom:18px;color:#2c3e50;">Acceso Restringido</h2>
+    <input id="userAuth" type="text" placeholder="Usuario" style="width:90%;padding:8px;margin-bottom:10px;border-radius:5px;border:1px solid #ccc;outline:none;" autofocus><br>
+    <input id="passAuth" type="password" placeholder="Contraseña" style="width:90%;padding:8px;margin-bottom:10px;border-radius:5px;border:1px solid #ccc;outline:none;"><br>
+    <button id="btnAuth" style="background:#3498db;color:#fff;padding:8px 20px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">Entrar</button>
+    <button id="btnCancelAuth" style="background:#e74c3c;color:#fff;padding:8px 20px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;margin-left:10px;">Cancelar</button>
+    <div id="msgAuth" style="color:#e74c3c;margin-top:10px;min-height:20px;font-size:0.95em;"></div>
+  </div>
+</div>
+<script>
+  // Persistencia básica de sesión
+  if(sessionStorage.getItem('autenticadoReportes')==='ok'){
+    document.getElementById('modalAuth').style.display='none';
+  }
+  document.getElementById('btnAuth').onclick=autenticar;
+  document.getElementById('btnCancelAuth').onclick=function(){window.location.href='index.html';};
+  document.getElementById('passAuth').addEventListener('keyup',function(e){if(e.key==='Enter'){autenticar();}});
+  document.getElementById('userAuth').addEventListener('keyup',function(e){if(e.key==='Enter'){document.getElementById('passAuth').focus();}});
+  function autenticar(){
+    var u=document.getElementById('userAuth').value.trim();
+    var p=document.getElementById('passAuth').value.trim();
+    if(u==='brimezadmin'&&p==='brimez1'){
+      sessionStorage.setItem('autenticadoReportes','ok');
+      document.getElementById('modalAuth').style.display='none';
+    }else{
+      document.getElementById('msgAuth').textContent='Usuario o contraseña incorrectos';
+      document.getElementById('passAuth').value='';
+      document.getElementById('passAuth').focus();
+    }
+  }
+</script>
