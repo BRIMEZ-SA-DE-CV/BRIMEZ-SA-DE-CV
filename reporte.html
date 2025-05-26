@@ -86,10 +86,32 @@
     #btnLimpiar:hover {
       background-color: #c0392b;
     }
+    .pdf-icon-container {
+      background-color: #27ae60;
+      color: white;
+      padding: 4px 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 4px;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+      user-select: none;
+    }
+    .pdf-icon {
+      font-size: 1.2em;
+      transition: color 0.3s ease;
+    }
+    .pdf-icon-container:hover .pdf-icon {
+      color: #145a32;
+    }
+    .pdf-icon-container:hover {
+      background-color: #2ecc71;
+    }
   </style>
 
-<link rel="icon" href="apple-touch-icon.png" type="image/png">
-
+  <link rel="icon" href="apple-touch-icon.png" type="image/png">
 
 </head>
 <body>
@@ -137,7 +159,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, orderBy, deleteDoc, doc, where, getDocsFromCache, writeBatch
+      getFirestore, collection, getDocs, query, orderBy, deleteDoc, doc, where, writeBatch
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -250,125 +272,127 @@
               <tr>
                 <th>ID</th><th>Nombre</th><th>Fecha</th>
                 <th>Entrada</th><th>Salida</th>
-                <th>Horas</th><th>Horas Extras</th>
+                <th>Horas</th><th>Horas Extras</th><th>Informe PDF</th>
               </tr>
             </thead><tbody>
         `;
 
-        registros.forEach(r => {
-          let entrada = r.horaEntrada || '-';
-          let salida = r.horaSalida || '-';
-          let horas = 0, extras = 0;
+        if (periodoActual === 'dia') {
+          registros.forEach(r => {
+            let entrada = r.horaEntrada || '-';
+            let salida = r.horaSalida || '-';
+            let horas = 0, extras = 0;
 
-          if (entrada !== '-' && salida !== '-') {
-            const t1 = new Date(`1970-01-01T${entrada}`);
-            const t2 = new Date(`1970-01-01T${salida}`);
-            let diff = (t2 - t1) / 3600000;
-            diff = Math.max(0, diff - 2);
+            if (entrada !== '-' && salida !== '-') {
+              const t1 = new Date(`1970-01-01T${entrada}`);
+              const t2 = new Date(`1970-01-01T${salida}`);
+              let diff = (t2 - t1) / 3600000;
+              diff = Math.max(0, diff - 2);
 
-            horas = diff;
-            extras = horas > 8 ? horas - 8 : 0;
-          }
+              horas = diff;
+              extras = horas > 8 ? horas - 8 : 0;
+            }
 
-          totalHoras += horas;
-          totalExtras += extras;
-          totalRegistros++;
+            totalHoras += horas;
+            totalExtras += extras;
+            totalRegistros++;
 
-          html += `<tr>
-            <td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td>
-            <td>${entrada}</td><td>${salida}</td>
-            <td>${formatearHorasDecimal(horas)}</td>
-            <td>${formatearHorasDecimal(extras)}</td>
+            html += `<tr>
+              <td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td>
+              <td>${entrada}</td><td>${salida}</td>
+              <td>${formatearHorasDecimal(horas)}</td>
+              <td>${formatearHorasDecimal(extras)}</td>
+              <td style="text-align:center;">
+                <div class="pdf-icon-container" title="Descargar Informe PDF">
+                  Descargar Informe PDF <span class="pdf-icon">📄</span>
+                </div>
+              </td>
+            </tr>`;
+          });
+        } else {
+          let sumaHoras = 0, sumaExtras = 0;
+
+          registros.forEach(r => {
+            let entrada = r.horaEntrada || '-';
+            let salida = r.horaSalida || '-';
+            let horas = 0, extras = 0;
+
+            if (entrada !== '-' && salida !== '-') {
+              const t1 = new Date(`1970-01-01T${entrada}`);
+              const t2 = new Date(`1970-01-01T${salida}`);
+              let diff = (t2 - t1) / 3600000;
+              diff = Math.max(0, diff - 2);
+
+              horas = diff;
+              extras = horas > 8 ? horas - 8 : 0;
+            }
+
+            sumaHoras += horas;
+            sumaExtras += extras;
+            totalHoras += horas;
+            totalExtras += extras;
+            totalRegistros++;
+
+            html += `<tr>
+              <td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td>
+              <td>${entrada}</td><td>${salida}</td>
+              <td>${formatearHorasDecimal(horas)}</td>
+              <td>${formatearHorasDecimal(extras)}</td>
+              <td></td>
+            </tr>`;
+          });
+
+          // Fila resumen con PDF único para el periodo
+          html += `<tr style="font-weight:bold; background:#f0f0f0;">
+            <td colspan="6" style="text-align:right;">Totales período:</td>
+            <td>${formatearHorasDecimal(sumaExtras)}</td>
+            <td style="text-align:center;">
+              <div class="pdf-icon-container" title="Descargar Informe PDF del período">
+                Descargar Informe PDF <span class="pdf-icon">📄</span>
+              </div>
+            </td>
           </tr>`;
-        });
-
-        html += `</tbody></table>`;
-      });
-
-      contenedor.innerHTML = html;
-      document.getElementById("totalRegistros").textContent = totalRegistros;
-      document.getElementById("totalHoras").textContent = formatearHorasDecimal(totalHoras);
-      document.getElementById("totalExtras").textContent = formatearHorasDecimal(totalExtras);
-    }
-
-    // Actualiza visibilidad de horas trabajadas (solo si empleado es individual)
-    function actualizarVisibilidadHoras() {
-      const horasCont = document.getElementById('horasTrabajadasCont');
-      if (empleadoActual === 'todos') {
-        horasCont.style.display = 'none';
-      } else {
-        horasCont.style.display = 'inline';
-      }
-    }
-
-    // Función para eliminar registros del día actual
-    async function limpiarRegistrosDia() {
-      if (!confirm('¿Seguro que quieres eliminar TODOS los registros del día de hoy? Esta acción no se puede deshacer.')) return;
-
-      const hoyStr = new Date().toISOString().slice(0, 10);
-      const registrosRef = collection(db, "registros_diarios");
-      const q = query(registrosRef, orderBy("fecha"));
-      const snap = await getDocs(q);
-
-      const batch = writeBatch(db);
-      let eliminados = 0;
-
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data.fecha === hoyStr) {
-          batch.delete(doc(db, "registros_diarios", docSnap.id));
-          eliminados++;
         }
+
+        html += '</tbody></table>';
       });
 
-      if (eliminados === 0) {
-        alert("No hay registros del día de hoy para eliminar.");
-        return;
-      }
+      contenedor.innerHTML = html || "<p>No hay registros para mostrar.</p>";
 
-      await batch.commit();
-      alert(`Se eliminaron ${eliminados} registros del día de hoy.`);
-      await cargarRegistros();
-    }
+      document.getElementById('totalRegistros').textContent = totalRegistros;
+      document.getElementById('totalHoras').textContent = formatearHorasDecimal(totalHoras);
+      document.getElementById('totalExtras').textContent = formatearHorasDecimal(totalExtras);
 
-    document.getElementById('btnLimpiar').addEventListener('click', limpiarRegistrosDia);
-
-    document.addEventListener("DOMContentLoaded", async () => {
-      await cargarEmpleados();
-      await cargarRegistros();
       actualizarVisibilidadHoras();
-    });
-  </script>
-<!-- Modal de Autenticación Profesional -->
-<div id="modalAuth" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(44,62,80,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;">
-  <div style="background:#fff;padding:30px 25px 20px 25px;border-radius:10px;box-shadow:0 2px 16px #222;width:320px;max-width:90vw;text-align:center;">
-    <h2 style="margin-bottom:18px;color:#2c3e50;">Acceso Restringido</h2>
-    <input id="userAuth" type="text" placeholder="Usuario" style="width:90%;padding:8px;margin-bottom:10px;border-radius:5px;border:1px solid #ccc;outline:none;" autofocus><br>
-    <input id="passAuth" type="password" placeholder="Contraseña" style="width:90%;padding:8px;margin-bottom:10px;border-radius:5px;border:1px solid #ccc;outline:none;"><br>
-    <button id="btnAuth" style="background:#3498db;color:#fff;padding:8px 20px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">Entrar</button>
-    <button id="btnCancelAuth" style="background:#e74c3c;color:#fff;padding:8px 20px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;margin-left:10px;">Cancelar</button>
-    <div id="msgAuth" style="color:#e74c3c;margin-top:10px;min-height:20px;font-size:0.95em;"></div>
-  </div>
-</div>
-<script>
-  // Persistencia básica de sesión
-  if(sessionStorage.getItem('autenticadoReportes')==='ok'){
-    document.getElementById('modalAuth').style.display='none';
-  }
-  document.getElementById('btnAuth').onclick=autenticar;
-  document.getElementById('btnCancelAuth').onclick=function(){window.location.href='index.html';};
-  document.getElementById('passAuth').addEventListener('keyup',function(e){if(e.key==='Enter'){autenticar();}});
-  document.getElementById('userAuth').addEventListener('keyup',function(e){if(e.key==='Enter'){document.getElementById('passAuth').focus();}});
-  function autenticar(){
-    var u=document.getElementById('userAuth').value.trim();
-    var p=document.getElementById('passAuth').value.trim();
-    if(u==='brimezadmin'&&p==='brimez1'){
-      sessionStorage.setItem('autenticadoReportes','ok');
-      document.getElementById('modalAuth').style.display='none';
-    }else{
-      document.getElementById('msgAuth').textContent='Usuario o contraseña incorrectos';
-      document.getElementById('passAuth').value='';
-      document.getElementById('passAuth').focus();
     }
-  }
-</script>
+
+    function actualizarVisibilidadHoras() {
+      const contHoras = document.getElementById('horasTrabajadasCont');
+      if (periodoActual === 'dia') {
+        contHoras.style.display = 'inline';
+      } else {
+        contHoras.style.display = 'none';
+      }
+    }
+
+    document.getElementById('btnLimpiar').addEventListener('click', async () => {
+      if (!confirm('¿Seguro que quieres eliminar todos los registros del día actual?')) return;
+      const hoyStr = new Date().toISOString().slice(0,10);
+      const q = query(collection(db, "registros_diarios"), where("fecha", "==", hoyStr));
+      const snap = await getDocs(q);
+      const batch = writeBatch(db);
+      snap.forEach(docu => batch.delete(doc(db, "registros_diarios", docu.id)));
+      await batch.commit();
+      alert('Registros del día eliminados.');
+      cargarRegistros();
+    });
+
+    // Inicialización
+    await cargarEmpleados();
+    await cargarRegistros();
+  </script>
+
+</body>
+</html>
+
+
