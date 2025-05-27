@@ -1,6 +1,8 @@
 <!DOCTYPE html> 
 <html lang="es">
 <head>
+
+  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reporte de Asistencia - BRIMEZ</title>
@@ -250,7 +252,16 @@
         const r = doc.data();
         if (r.fecha < limite) return;
 
-        if (empleadoActual !== 'todos' && r.id !== empleadoActual) return;
+        if (empleadoActual !== 'todos') {
+          // Solo mostrar registros que coincidan con ID y nombre del empleado actual
+          if (r.id !== empleadoActual) return;
+
+          // Verificar que el nombre del registro coincida con el nombre actual del empleado
+          // Esto evita mostrar registros antiguos con mismo ID pero nombre distinto
+          const empleadoSeleccionado = document.querySelector(`#filtroEmpleado option[value="${empleadoActual}"]`);
+          if (!empleadoSeleccionado) return;
+          if (r.nombre !== empleadoSeleccionado.textContent) return;
+        }
 
         const clave = `${r.id}_${r.nombre}`;
 
@@ -392,7 +403,6 @@
     await cargarRegistros();
   </script>
 
+  </script>
 </body>
 </html>
-
-
