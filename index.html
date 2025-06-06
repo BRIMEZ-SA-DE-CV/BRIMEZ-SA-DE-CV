@@ -324,6 +324,15 @@
   </style>
 </head>
 <body>
+
+  <script>
+    // Doble protección: Validar sesión al cargar index.html
+    if (sessionStorage.getItem('logueado') !== 'true') {
+      window.location.href = 'inicio.html';
+    }
+  </script>
+
+
   <h1>Registro de Empleados</h1>
   <div id="clock">--:--:--</div>
 
@@ -947,6 +956,7 @@ function verificarCredenciales() {
     document.getElementById('authError').textContent = 'Contraseña incorrecta.';
     return;
   }
+  sessionStorage.setItem('modalAutenticado', 'true');
   cerrarAuthModal();
   if (typeof accionPendiente === 'function') accionPendiente();
 }

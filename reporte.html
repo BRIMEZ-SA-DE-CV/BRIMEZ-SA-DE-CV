@@ -161,6 +161,20 @@
 </head>
 <body>
 
+
+  <script>
+    // Protección: Solo acceso tras autenticación modal
+    if (sessionStorage.getItem('modalAutenticado') !== 'true') {
+      window.location.href = 'index.html';
+    }
+    // Doble protección: Validar sesión al cargar reporte.html
+    if (sessionStorage.getItem('logueado') !== 'true') {
+      window.location.href = 'inicio.html';
+    }
+  </script>
+  
+
+
   <header>
     <h1>Reporte de Asistencia</h1>
     <p id="clock"></p>
@@ -204,7 +218,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, orderBy, deleteDoc, doc, where, writeBatch
+      getFirestore, collection, getDocs, query, orderBy, deleteDoc, doc, where, writeBatch, getDoc
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -222,6 +236,7 @@
 
     let periodoActual = 'dia';
     let empleadoActual = 'todos';
+    let registrosPorEmpleado = new Map(); // Global para PDF
 
     const clock = document.getElementById('clock');
     setInterval(() => {
@@ -244,14 +259,11 @@
       });
     });
 
-    // Función para cargar empleados al filtro
+    // Cargar empleados en el filtro
     async function cargarEmpleados() {
       const sel = document.getElementById('filtroEmpleado');
       const snap = await getDocs(collection(db, "empleados"));
-
-      // Limpiar opciones excepto "Todos"
       sel.querySelectorAll('option:not([value="todos"])').forEach(opt => opt.remove());
-
       snap.forEach(doc => {
         const emp = doc.data();
         const opt = document.createElement('option');
@@ -261,7 +273,6 @@
       });
     }
 
-    // Obtiene fecha límite para filtrar según periodo
     function obtenerFechaLimite() {
       const hoy = new Date();
       switch (periodoActual) {
@@ -273,153 +284,124 @@
       return hoy.toISOString().slice(0, 10);
     }
 
-    // Formatea horas en decimal a hh:mm
-    function formatearHorasDecimal(decimal) {
-      const horas = Math.floor(decimal);
-      const minutos = Math.round((decimal - horas) * 60);
-      return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+    function formatearHorasDecimal(decimal, esExtra = false) {
+      if (esExtra && (!decimal || decimal < (1/60))) {
+        return "Sin horas extra";
+      }
+      if (decimal < 1 && decimal > 0) {
+        const minutos = Math.round(decimal * 60);
+        return `${minutos} minutos`;
+      } else {
+        const horas = Math.floor(decimal);
+        const minutos = Math.round((decimal - horas) * 60);
+        return `${horas}:${minutos.toString().padStart(2, '0')} horas`;
+      }
     }
 
-    // Carga y muestra registros filtrados
+    // Calcula la superposición de dos intervalos de tiempo (en minutos)
+    function calcularSuperposicion(inicio1, fin1, inicio2, fin2) {
+      const inicio = Math.max(inicio1, inicio2);
+      const fin = Math.min(fin1, fin2);
+      return Math.max(0, fin - inicio);
+    }
+
+    // Convierte una hora "HH:mm:ss" a minutos desde las 00:00
+    function horaToMinutos(hora) {
+      if (!hora) return null;
+      const [h, m, s] = hora.split(":").map(Number);
+      return h * 60 + m + (s ? s / 60 : 0);
+    }
+
+    // Carga y muestra registros filtrados, descontando comida personalizada
     async function cargarRegistros() {
       const contenedor = document.getElementById('registroContainer');
       contenedor.innerHTML = "Cargando...";
+      registrosPorEmpleado = new Map();
 
       const snap = await getDocs(query(collection(db, "registros_diarios"), orderBy("fecha", "desc")));
       const limite = obtenerFechaLimite();
       let totalHoras = 0, totalExtras = 0, totalRegistros = 0;
 
-      let registrosPorEmpleado = new Map();
+      // Cache de horarios de comida
+      const cacheComidas = {};
 
-      snap.forEach(doc => {
-        const r = doc.data();
-        if (r.fecha < limite) return;
-
-        if (empleadoActual !== 'todos') {
-          // Solo mostrar registros que coincidan con ID y nombre del empleado actual
-          if (r.id !== empleadoActual) return;
-
-          // Verificar que el nombre del registro coincida con el nombre actual del empleado
-          // Esto evita mostrar registros antiguos con mismo ID pero nombre distinto
-          const empleadoSeleccionado = document.querySelector(`#filtroEmpleado option[value="${empleadoActual}"]`);
-          if (!empleadoSeleccionado) return;
-          if (r.nombre !== empleadoSeleccionado.textContent) return;
-        }
-
+      for (const docu of snap.docs) {
+        const r = docu.data();
+        if (r.fecha < limite) continue;
+        if (empleadoActual !== 'todos' && r.id !== empleadoActual) continue;
         const clave = `${r.id}_${r.nombre}`;
-
-        if (!registrosPorEmpleado.has(clave)) {
-          registrosPorEmpleado.set(clave, []);
-        }
+        if (!registrosPorEmpleado.has(clave)) registrosPorEmpleado.set(clave, []);
         registrosPorEmpleado.get(clave).push(r);
-      });
+      }
 
       let html = '';
-
-      registrosPorEmpleado.forEach((registros, clave) => {
+      for (const [clave, registros] of registrosPorEmpleado.entries()) {
         const [id, nombre] = clave.split('_');
-
         html += `<h3>👤 ${nombre} (ID: ${id})</h3>`;
-        html += `
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th><th>Nombre</th><th>Fecha</th>
-                <th>Entrada</th><th>Salida</th>
-                <th>Horas</th><th>Horas Extras</th><th>Informe PDF</th>
-              </tr>
-            </thead><tbody>
-        `;
-
-        if (periodoActual === 'dia') {
-          registros.forEach(r => {
-            let entrada = r.horaEntrada || '-';
-            let salida = r.horaSalida || '-';
-            let horas = 0, extras = 0;
-
-            if (entrada !== '-' && salida !== '-') {
-              const t1 = new Date(`1970-01-01T${entrada}`);
-              const t2 = new Date(`1970-01-01T${salida}`);
-              let diff = (t2 - t1) / 3600000;
-              diff = Math.max(0, diff - 2);
-
-              horas = diff;
-              extras = horas > 8 ? horas - 8 : 0;
-            }
-
-            totalHoras += horas;
-            totalExtras += extras;
-            totalRegistros++;
-
-            html += `<tr>
-              <td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td>
-              <td>${entrada}</td><td>${salida}</td>
-              <td>${formatearHorasDecimal(horas)}</td>
-              <td>${formatearHorasDecimal(extras)}</td>
-              <td style="text-align:center;">
-                <button class="pdf-icon-container btn-descargar-pdf" data-id="${r.id}" data-nombre="${r.nombre}" title="Descargar Informe PDF">
-                  Descargar Informe PDF <span class="pdf-icon">📄</span>
-                </button>
-              </td>
-            </tr>`;
-          });
-        } else {
-          let sumaHoras = 0, sumaExtras = 0;
-
-          registros.forEach(r => {
-            let entrada = r.horaEntrada || '-';
-            let salida = r.horaSalida || '-';
-            let horas = 0, extras = 0;
-
-            if (entrada !== '-' && salida !== '-') {
-              const t1 = new Date(`1970-01-01T${entrada}`);
-              const t2 = new Date(`1970-01-01T${salida}`);
-              let diff = (t2 - t1) / 3600000;
-              diff = Math.max(0, diff - 2);
-
-              horas = diff;
-              extras = horas > 8 ? horas - 8 : 0;
-            }
-
-            sumaHoras += horas;
-            sumaExtras += extras;
-            totalHoras += horas;
-            totalExtras += extras;
-            totalRegistros++;
-
-            html += `<tr>
-              <td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td>
-              <td>${entrada}</td><td>${salida}</td>
-              <td>${formatearHorasDecimal(horas)}</td>
-              <td>${formatearHorasDecimal(extras)}</td>
-              <td></td>
-            </tr>`;
-          });
-
-          // Fila resumen con PDF único para el periodo
-          html += `<tr style="font-weight:bold; background:#f0f0f0;">
-            <td colspan="6" style="text-align:right;">Totales período:</td>
-            <td>${formatearHorasDecimal(sumaExtras)}</td>
-            <td style="text-align:center;">
-              <button class="pdf-icon-container btn-descargar-pdf-periodo" data-id="${id}" data-nombre="${nombre}" title="Descargar Informe PDF del período">
-                Descargar Informe PDF <span class="pdf-icon">📄</span>
-              </button>
-            </td>
-          </tr>`;
+        html += `<table><thead><tr><th>ID</th><th>Nombre</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Horas Extras</th>`;
+        if (periodoActual !== 'dia') {
+          html += `<th>Informes PDF</th>`;
         }
-
+        html += `</tr></thead><tbody>`;
+        let sumaHoras = 0, sumaExtras = 0;
+        for (const r of registros) {
+          let entrada = r.horaEntrada || '-';
+          let salida = r.horaSalida || '-';
+          let horas = 0, extras = 0;
+          if (entrada !== '-' && salida !== '-') {
+            // Obtener horario de comida personalizado
+            let comidaInicio = null, comidaFin = null;
+            if (!cacheComidas[id]) {
+              const docEmp = await getDoc(doc(db, "empleados", id));
+              if (docEmp.exists()) {
+                const emp = docEmp.data();
+                comidaInicio = emp.comidaInicio;
+                comidaFin = emp.comidaFin;
+                cacheComidas[id] = {comidaInicio, comidaFin};
+              } else {
+                cacheComidas[id] = {comidaInicio: null, comidaFin: null};
+              }
+            } else {
+              ({comidaInicio, comidaFin} = cacheComidas[id]);
+            }
+            // Calcular minutos trabajados descontando comida
+            const minEntrada = horaToMinutos(entrada);
+            const minSalida = horaToMinutos(salida);
+            let minutosTrabajados = minSalida - minEntrada;
+            if (comidaInicio && comidaFin) {
+              const minComidaInicio = horaToMinutos(comidaInicio);
+              const minComidaFin = horaToMinutos(comidaFin);
+              // Descontar solo si hay superposición
+              const minutosDescontar = calcularSuperposicion(minEntrada, minSalida, minComidaInicio, minComidaFin);
+              minutosTrabajados -= minutosDescontar;
+            }
+            horas = minutosTrabajados / 60;
+            extras = horas > 8 ? horas - 8 : 0;
+          }
+          sumaHoras += horas;
+          sumaExtras += extras;
+          totalHoras += horas;
+          totalExtras += extras;
+          totalRegistros++;
+          html += `<tr><td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td><td>${entrada}</td><td>${salida}</td><td>${formatearHorasDecimal(horas)}</td><td>${formatearHorasDecimal(extras, true)}</td>`;
+          // No agregar botón en filas individuales de período
+          if (periodoActual !== 'dia') {
+            html += `<td></td>`;
+          }
+          html += `</tr>`;
+        }
+        // Fila resumen para periodo
+        if (periodoActual !== 'dia') {
+          html += `<tr style="font-weight:bold; background:#f0f0f0;"><td colspan="5" style="text-align:right;">Totales período:</td><td>${formatearHorasDecimal(sumaHoras)}</td><td>${formatearHorasDecimal(sumaExtras)}</td><td style="text-align:center;"><button class="pdf-icon-container btn-descargar-pdf-periodo" data-id="${id}" data-nombre="${nombre}" title="Descargar Informe PDF del período">Descargar Informe PDF <span class="pdf-icon">📄</span></button></td></tr>`;
+        }
         html += '</tbody></table>';
-      });
-
+      }
       contenedor.innerHTML = html || "<p>No hay registros para mostrar.</p>";
-
       document.getElementById('totalRegistros').textContent = totalRegistros;
       document.getElementById('totalHoras').textContent = formatearHorasDecimal(totalHoras);
       document.getElementById('totalExtras').textContent = formatearHorasDecimal(totalExtras);
-
       actualizarVisibilidadHoras();
-
-      // ASIGNA EL EVENTO CLICK A TODOS LOS BOTONES PDF (DÍA Y PERÍODO)
+      // Eventos PDF
       document.querySelectorAll('.btn-descargar-pdf').forEach(btn => {
         btn.addEventListener('click', async function() {
           const id = this.getAttribute('data-id');
@@ -428,7 +410,7 @@
           await generarPDFUsuario(nombre, id, registrosFiltrados, periodoActual);
         });
       });
-      document.querySelectorAll('.btn-descargar-pdf-periodo').forEach(btn => {
+      document.querySelectorAll('.btn-descargar-pdf-todo-periodo').forEach(btn => {
         btn.addEventListener('click', async function() {
           const id = this.getAttribute('data-id');
           const nombre = this.getAttribute('data-nombre');
@@ -462,8 +444,6 @@
     // Inicialización
     await cargarEmpleados();
     await cargarRegistros();
-  </script>
-
   </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.0/jspdf.plugin.autotable.min.js"></script>
