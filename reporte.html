@@ -7,117 +7,173 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reporte de Asistencia - BRIMEZ</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      background: #f4f4f4;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
     }
+  
+    body {
+      min-height: 100vh;
+      width: 100vw;
+      background: linear-gradient(135deg, #1e1e1e, #2c3e50);
+      color: #fff;
+      position: relative;
+      overflow-x: hidden;
+    }
+  
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
+      z-index: -1;
+      -webkit-backface-visibility: hidden;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      will-change: opacity;
+    }
+  
     header {
-      background-color: #2c3e50;
+      background-color: rgba(44, 62, 80, 0.8);
+      backdrop-filter: blur(10px);
       color: white;
       padding: 15px;
       text-align: center;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
+  
     nav {
-      background: #ecf0f1;
+      background: rgba(255, 255, 255, 0.1);
       padding: 10px;
       text-align: center;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
+  
     nav a {
       margin: 0 10px;
       text-decoration: none;
-      color: #2c3e50;
+      color: #ffffff;
       font-weight: bold;
+      transition: color 0.3s ease;
     }
+  
+    nav a:hover {
+      color: #81c784;
+    }
+  
     .filtros {
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
       padding: 10px 20px;
-      background: white;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(6px);
+      border-radius: 0 0 12px 12px;
     }
+  
     select, button {
       padding: 6px 10px;
       margin: 5px;
-    }
-    button.activo {
-      background-color: #3498db;
-      color: white;
+      border-radius: 6px;
       border: none;
+      font-weight: bold;
     }
+  
+    button.activo {
+      background-color: #4caf50;
+      color: white;
+    }
+  
     #registroContainer {
       padding: 20px;
       overflow-x: auto;
     }
+  
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
-      margin-bottom: 30px;
-      table-layout: fixed;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(4px);
+      border-radius: 10px;
+      overflow: hidden;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     }
+  
     th, td {
-      border: 1px solid #ddd;
+      border: 1px solid rgba(255, 255, 255, 0.2);
       padding: 8px;
       text-align: left;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    th:nth-child(2), td:nth-child(2) { /* Nombre */
+  
+    th {
+      background-color: rgba(255, 255, 255, 0.12);
+    }
+  
+    th:nth-child(2), td:nth-child(2) {
       width: 18%;
       min-width: 120px;
       max-width: 200px;
     }
-    th:nth-child(1), td:nth-child(1) { /* ID */
+  
+    th:nth-child(1), td:nth-child(1) {
       width: 8%;
       min-width: 60px;
       max-width: 90px;
     }
-    th:nth-child(3), td:nth-child(3) { /* Fecha */
+  
+    th:nth-child(3), td:nth-child(3) {
       width: 13%;
       min-width: 90px;
       max-width: 120px;
     }
+  
     th:nth-child(4), td:nth-child(4),
-    th:nth-child(5), td:nth-child(5) { /* Entrada, Salida */
+    th:nth-child(5), td:nth-child(5) {
       width: 10%;
       min-width: 70px;
       max-width: 90px;
     }
+  
     th:nth-child(6), td:nth-child(6),
-    th:nth-child(7), td:nth-child(7) { /* Horas, Extras */
+    th:nth-child(7), td:nth-child(7) {
       width: 12%;
       min-width: 80px;
       max-width: 100px;
     }
-    th:nth-child(8), td:nth-child(8) { /* Informe PDF */
+  
+    th:nth-child(8), td:nth-child(8) {
       width: 17%;
       min-width: 110px;
       max-width: 150px;
     }
-    @media (max-width: 900px) {
-      th, td {
-        font-size: 0.95em;
-        padding: 6px;
-      }
-      th:nth-child(2), td:nth-child(2) { min-width: 80px; max-width: 120px; }
-    }
-    th {
-      background-color: #bdc3c7;
-    }
+  
     h3 {
-      background: #ecf0f1;
+      background: rgba(255,255,255,0.08);
       padding: 10px;
       margin-top: 20px;
+      border-radius: 10px;
+      color: #a5d6a7;
     }
+  
     .totales {
-      background: #fff;
+      background: rgba(255, 255, 255, 0.08);
       padding: 10px 20px;
       display: flex;
       justify-content: space-around;
       font-weight: bold;
+      backdrop-filter: blur(4px);
+      border-radius: 10px;
+      color: #fff;
     }
+  
     #btnLimpiar {
       background-color: #e74c3c;
       color: white;
@@ -126,11 +182,14 @@
       margin: 10px 20px;
       padding: 8px 12px;
       font-weight: bold;
-      border-radius: 4px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
     }
+  
     #btnLimpiar:hover {
       background-color: #c0392b;
     }
+  
     .pdf-icon-container {
       background-color: #27ae60;
       color: white;
@@ -144,22 +203,60 @@
       font-weight: bold;
       user-select: none;
     }
+  
     .pdf-icon {
       font-size: 1.2em;
       transition: color 0.3s ease;
     }
+  
     .pdf-icon-container:hover .pdf-icon {
       color: #145a32;
     }
+  
     .pdf-icon-container:hover {
       background-color: #2ecc71;
     }
+  
+    @media (max-width: 900px) {
+      th, td {
+        font-size: 0.95em;
+        padding: 6px;
+      }
+      th:nth-child(2), td:nth-child(2) { min-width: 80px; max-width: 120px; }
+    }
+
+
+    tr.totales-fila {
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: black;
+  background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+
+
+
   </style>
+  
 
   <link rel="icon" href="apple-touch-icon.png" type="image/png">
 
 </head>
 <body>
+
+
+  <script>
+    // Protección: Solo acceso tras autenticación modal
+    if (sessionStorage.getItem('modalAutenticado') !== 'true') {
+      window.location.href = 'index.html';
+    }
+    // Doble protección: Validar sesión al cargar reporte.html
+    if (sessionStorage.getItem('logueado') !== 'true') {
+      window.location.href = 'inicio.html';
+    }
+  </script>
+  
+
 
   <header>
     <h1>Reporte de Asistencia</h1>
@@ -204,7 +301,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, orderBy, deleteDoc, doc, where, writeBatch
+      getFirestore, collection, getDocs, query, orderBy, deleteDoc, doc, where, writeBatch, getDoc
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -222,6 +319,7 @@
 
     let periodoActual = 'dia';
     let empleadoActual = 'todos';
+    let registrosPorEmpleado = new Map(); // Global para PDF
 
     const clock = document.getElementById('clock');
     setInterval(() => {
@@ -244,14 +342,11 @@
       });
     });
 
-    // Función para cargar empleados al filtro
+    // Cargar empleados en el filtro
     async function cargarEmpleados() {
       const sel = document.getElementById('filtroEmpleado');
       const snap = await getDocs(collection(db, "empleados"));
-
-      // Limpiar opciones excepto "Todos"
       sel.querySelectorAll('option:not([value="todos"])').forEach(opt => opt.remove());
-
       snap.forEach(doc => {
         const emp = doc.data();
         const opt = document.createElement('option');
@@ -261,7 +356,6 @@
       });
     }
 
-    // Obtiene fecha límite para filtrar según periodo
     function obtenerFechaLimite() {
       const hoy = new Date();
       switch (periodoActual) {
@@ -273,170 +367,204 @@
       return hoy.toISOString().slice(0, 10);
     }
 
-    // Formatea horas en decimal a hh:mm
-    function formatearHorasDecimal(decimal) {
-      const horas = Math.floor(decimal);
-      const minutos = Math.round((decimal - horas) * 60);
-      return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+    function formatearHorasDecimal(decimal, esExtra = false) {
+      if (esExtra && (!decimal || decimal < (1/60))) {
+        return "Sin horas extra";
+      }
+      if (decimal < 1 && decimal > 0) {
+        const minutos = Math.round(decimal * 60);
+        return `${minutos} minutos`;
+      } else {
+        const horas = Math.floor(decimal);
+        const minutos = Math.round((decimal - horas) * 60);
+        return `${horas}:${minutos.toString().padStart(2, '0')} horas`;
+      }
     }
 
-    // Carga y muestra registros filtrados
-    async function cargarRegistros() {
-      const contenedor = document.getElementById('registroContainer');
-      contenedor.innerHTML = "Cargando...";
-
-      const snap = await getDocs(query(collection(db, "registros_diarios"), orderBy("fecha", "desc")));
-      const limite = obtenerFechaLimite();
-      let totalHoras = 0, totalExtras = 0, totalRegistros = 0;
-
-      let registrosPorEmpleado = new Map();
-
-      snap.forEach(doc => {
-        const r = doc.data();
-        if (r.fecha < limite) return;
-
-        if (empleadoActual !== 'todos') {
-          // Solo mostrar registros que coincidan con ID y nombre del empleado actual
-          if (r.id !== empleadoActual) return;
-
-          // Verificar que el nombre del registro coincida con el nombre actual del empleado
-          // Esto evita mostrar registros antiguos con mismo ID pero nombre distinto
-          const empleadoSeleccionado = document.querySelector(`#filtroEmpleado option[value="${empleadoActual}"]`);
-          if (!empleadoSeleccionado) return;
-          if (r.nombre !== empleadoSeleccionado.textContent) return;
-        }
-
-        const clave = `${r.id}_${r.nombre}`;
-
-        if (!registrosPorEmpleado.has(clave)) {
-          registrosPorEmpleado.set(clave, []);
-        }
-        registrosPorEmpleado.get(clave).push(r);
-      });
-
-      let html = '';
-
-      registrosPorEmpleado.forEach((registros, clave) => {
-        const [id, nombre] = clave.split('_');
-
-        html += `<h3>👤 ${nombre} (ID: ${id})</h3>`;
-        html += `
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th><th>Nombre</th><th>Fecha</th>
-                <th>Entrada</th><th>Salida</th>
-                <th>Horas</th><th>Horas Extras</th><th>Informe PDF</th>
-              </tr>
-            </thead><tbody>
-        `;
-
-        if (periodoActual === 'dia') {
-          registros.forEach(r => {
-            let entrada = r.horaEntrada || '-';
-            let salida = r.horaSalida || '-';
-            let horas = 0, extras = 0;
-
-            if (entrada !== '-' && salida !== '-') {
-              const t1 = new Date(`1970-01-01T${entrada}`);
-              const t2 = new Date(`1970-01-01T${salida}`);
-              let diff = (t2 - t1) / 3600000;
-              diff = Math.max(0, diff - 2);
-
-              horas = diff;
-              extras = horas > 8 ? horas - 8 : 0;
-            }
-
-            totalHoras += horas;
-            totalExtras += extras;
-            totalRegistros++;
-
-            html += `<tr>
-              <td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td>
-              <td>${entrada}</td><td>${salida}</td>
-              <td>${formatearHorasDecimal(horas)}</td>
-              <td>${formatearHorasDecimal(extras)}</td>
-              <td style="text-align:center;">
-                <button class="pdf-icon-container btn-descargar-pdf" data-id="${r.id}" data-nombre="${r.nombre}" title="Descargar Informe PDF">
-                  Descargar Informe PDF <span class="pdf-icon">📄</span>
-                </button>
-              </td>
-            </tr>`;
-          });
-        } else {
-          let sumaHoras = 0, sumaExtras = 0;
-
-          registros.forEach(r => {
-            let entrada = r.horaEntrada || '-';
-            let salida = r.horaSalida || '-';
-            let horas = 0, extras = 0;
-
-            if (entrada !== '-' && salida !== '-') {
-              const t1 = new Date(`1970-01-01T${entrada}`);
-              const t2 = new Date(`1970-01-01T${salida}`);
-              let diff = (t2 - t1) / 3600000;
-              diff = Math.max(0, diff - 2);
-
-              horas = diff;
-              extras = horas > 8 ? horas - 8 : 0;
-            }
-
-            sumaHoras += horas;
-            sumaExtras += extras;
-            totalHoras += horas;
-            totalExtras += extras;
-            totalRegistros++;
-
-            html += `<tr>
-              <td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td>
-              <td>${entrada}</td><td>${salida}</td>
-              <td>${formatearHorasDecimal(horas)}</td>
-              <td>${formatearHorasDecimal(extras)}</td>
-              <td></td>
-            </tr>`;
-          });
-
-          // Fila resumen con PDF único para el periodo
-          html += `<tr style="font-weight:bold; background:#f0f0f0;">
-            <td colspan="6" style="text-align:right;">Totales período:</td>
-            <td>${formatearHorasDecimal(sumaExtras)}</td>
-            <td style="text-align:center;">
-              <button class="pdf-icon-container btn-descargar-pdf-periodo" data-id="${id}" data-nombre="${nombre}" title="Descargar Informe PDF del período">
-                Descargar Informe PDF <span class="pdf-icon">📄</span>
-              </button>
-            </td>
-          </tr>`;
-        }
-
-        html += '</tbody></table>';
-      });
-
-      contenedor.innerHTML = html || "<p>No hay registros para mostrar.</p>";
-
-      document.getElementById('totalRegistros').textContent = totalRegistros;
-      document.getElementById('totalHoras').textContent = formatearHorasDecimal(totalHoras);
-      document.getElementById('totalExtras').textContent = formatearHorasDecimal(totalExtras);
-
-      actualizarVisibilidadHoras();
-
-      // ASIGNA EL EVENTO CLICK A TODOS LOS BOTONES PDF (DÍA Y PERÍODO)
-      document.querySelectorAll('.btn-descargar-pdf').forEach(btn => {
-        btn.addEventListener('click', async function() {
-          const id = this.getAttribute('data-id');
-          const nombre = this.getAttribute('data-nombre');
-          const registrosFiltrados = registrosPorEmpleado.get(`${id}_${nombre}`);
-          await generarPDFUsuario(nombre, id, registrosFiltrados, periodoActual);
-        });
-      });
-      document.querySelectorAll('.btn-descargar-pdf-periodo').forEach(btn => {
-        btn.addEventListener('click', async function() {
-          const id = this.getAttribute('data-id');
-          const nombre = this.getAttribute('data-nombre');
-          const registrosFiltrados = registrosPorEmpleado.get(`${id}_${nombre}`);
-          await generarPDFUsuario(nombre, id, registrosFiltrados, periodoActual);
-        });
-      });
+    // Calcula la superposición de dos intervalos de tiempo (en minutos)
+    function calcularSuperposicion(inicio1, fin1, inicio2, fin2) {
+      const inicio = Math.max(inicio1, inicio2);
+      const fin = Math.min(fin1, fin2);
+      return Math.max(0, fin - inicio);
     }
+
+    // Convierte una hora "HH:mm:ss" a minutos desde las 00:00
+    function horaToMinutos(hora) {
+      if (!hora) return null;
+      const [h, m, s] = hora.split(":").map(Number);
+      return h * 60 + m + (s ? s / 60 : 0);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// NUEVA FUNCIÓN para reporte.html compatible con la estructura de 'registros'
+async function cargarRegistros() {
+  const contenedor = document.getElementById('registroContainer');
+  contenedor.innerHTML = "Cargando...";
+  registrosPorEmpleado = new Map();
+
+  const snap = await getDocs(query(collection(db, "registros"), orderBy("fechaCompleta", "desc")));
+
+  const hoy = new Date();
+  const inicio = new Date(hoy);
+  switch (periodoActual) {
+    case 'semana': inicio.setDate(hoy.getDate() - 7); break;
+    case 'quincena': inicio.setDate(hoy.getDate() - 15); break;
+    case 'mes': inicio.setDate(hoy.getDate() - 30); break;
+    default:
+      inicio.setHours(0, 0, 0, 0);
+      hoy.setHours(23, 59, 59, 999);
+      break;
+  }
+
+  let totalHoras = 0, totalExtras = 0, totalRegistros = 0;
+  const registrosAgrupados = new Map();
+  const cacheComidas = {};
+
+  for (const docu of snap.docs) {
+    const r = docu.data();
+    if (r.fechaCompleta < inicio.toISOString() || r.fechaCompleta > hoy.toISOString()) continue;
+    if (empleadoActual !== 'todos' && r.id !== empleadoActual) continue;
+
+    const claveEmpleado = `${r.id}_${r.nombre}`;
+    if (!registrosAgrupados.has(claveEmpleado)) registrosAgrupados.set(claveEmpleado, {});
+    const porFecha = registrosAgrupados.get(claveEmpleado);
+
+    if (!porFecha[r.fecha]) porFecha[r.fecha] = [];
+    porFecha[r.fecha].push(r);
+  }
+
+  let html = '';
+
+  for (const [clave, registrosPorFecha] of registrosAgrupados.entries()) {
+    const [id, nombre] = clave.split('_');
+    html += `<h3>👤 ${nombre} (ID: ${id})</h3>`;
+    html += `<table><thead><tr><th>ID</th><th>Nombre</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Horas Extras</th>`;
+    if (periodoActual !== 'dia') html += `<th>Informe PDF</th>`;
+    html += `</tr></thead><tbody>`;
+
+    let sumaHoras = 0, sumaExtras = 0;
+    const registrosParaPDF = [];
+
+    for (const fecha in registrosPorFecha) {
+      const registros = registrosPorFecha[fecha];
+      let entrada = null, salida = null;
+
+      // Filtrar entradas y salidas válidas
+      const entradas = registros.filter(r => r.tipo === "Entrada").map(r => r.hora).sort();
+      const salidas = registros.filter(r => r.tipo === "Salida").map(r => r.hora).sort();
+
+      if (entradas.length > 0) entrada = entradas[0];
+      if (salidas.length > 0) salida = salidas[salidas.length - 1];
+
+      let horas = 0, extras = 0;
+
+      if (entrada && salida) {
+        if (!cacheComidas[id]) {
+          const docEmp = await getDoc(doc(db, "empleados", id));
+          if (docEmp.exists()) {
+            const emp = docEmp.data();
+            cacheComidas[id] = {
+              comidaInicio: emp.comidaInicio,
+              comidaFin: emp.comidaFin
+            };
+          } else {
+            cacheComidas[id] = { comidaInicio: null, comidaFin: null };
+          }
+        }
+
+        const { comidaInicio, comidaFin } = cacheComidas[id];
+        const minEntrada = horaToMinutos(entrada);
+        const minSalida = horaToMinutos(salida);
+        let minutosTrabajados = minSalida - minEntrada;
+
+        if (comidaInicio && comidaFin) {
+          const minComidaInicio = horaToMinutos(comidaInicio);
+          const minComidaFin = horaToMinutos(comidaFin);
+          const minDescontar = calcularSuperposicion(minEntrada, minSalida, minComidaInicio, minComidaFin);
+          minutosTrabajados -= minDescontar;
+        }
+
+        horas = minutosTrabajados / 60;
+        extras = horas > 8 ? horas - 8 : 0;
+      }
+
+      sumaHoras += horas;
+      sumaExtras += extras;
+      totalHoras += horas;
+      totalExtras += extras;
+      totalRegistros++;
+
+      registrosParaPDF.push({
+        fecha, horaEntrada: entrada, horaSalida: salida,
+        horas: formatearHorasDecimal(horas), extras: formatearHorasDecimal(extras, true)
+      });
+
+      html += `<tr><td>${id}</td><td>${nombre}</td><td>${fecha}</td><td>${entrada || '-'}</td><td>${salida || '-'}</td><td>${formatearHorasDecimal(horas)}</td><td>${formatearHorasDecimal(extras, true)}</td>`;
+      if (periodoActual !== 'dia') html += `<td></td>`;
+      html += `</tr>`;
+    }
+
+    if (periodoActual !== 'dia') {
+      html += `<tr class="totales-fila"> background:#f0f0f0;"><td colspan="5" style="text-align:right;">Totales período:</td><td>${formatearHorasDecimal(sumaHoras)}</td><td>${formatearHorasDecimal(sumaExtras)}</td><td style="text-align:center;"><button class="pdf-icon-container btn-descargar-pdf-periodo" data-id="${id}" data-nombre="${nombre}" title="Descargar Informe PDF del período">PDF <span class="pdf-icon">📄</span></button></td></tr>`;
+    }
+
+    html += '</tbody></table>';
+    registrosPorEmpleado.set(clave, registrosParaPDF); // Para el PDF
+  }
+
+  contenedor.innerHTML = html || "<p>No hay registros para mostrar.</p>";
+  document.getElementById('totalRegistros').textContent = totalRegistros;
+  document.getElementById('totalHoras').textContent = formatearHorasDecimal(totalHoras);
+  document.getElementById('totalExtras').textContent = formatearHorasDecimal(totalExtras);
+  actualizarVisibilidadHoras();
+
+  document.querySelectorAll('.btn-descargar-pdf-periodo').forEach(btn => {
+    btn.addEventListener('click', async function () {
+      const id = this.getAttribute('data-id');
+      const nombre = this.getAttribute('data-nombre');
+      const registrosFiltrados = registrosPorEmpleado.get(`${id}_${nombre}`);
+      await generarPDFUsuario(nombre, id, registrosFiltrados, periodoActual);
+    });
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     function actualizarVisibilidadHoras() {
       const contHoras = document.getElementById('horasTrabajadasCont');
@@ -462,8 +590,6 @@
     // Inicialización
     await cargarEmpleados();
     await cargarRegistros();
-  </script>
-
   </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.0/jspdf.plugin.autotable.min.js"></script>

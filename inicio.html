@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Inicio de Sesión - Brimez</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: url('fondo-brimez.png') no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+    }
+
+    .overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 1;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      width: 320px;
+      text-align: center;
+      margin: auto;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: transform 0.2s ease;
+    }
+
+    .container.shake {
+      animation: shake 0.3s;
+    }
+
+    @keyframes shake {
+      0% { transform: translateY(-50%) translateX(0); }
+      25% { transform: translateY(-50%) translateX(-5px); }
+      50% { transform: translateY(-50%) translateX(5px); }
+      75% { transform: translateY(-50%) translateX(-5px); }
+      100% { transform: translateY(-50%) translateX(0); }
+    }
+
+    .logo {
+      width: 180px;
+      margin-bottom: 10px;
+    }
+
+    .slogan {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .error-message.show {
+      display: block;
+      opacity: 1;
+    }
+  </style>
+
+<link rel="icon" href="apple-touch-icon.png" type="image/png">
+
+</head>
+<body>
+  
+  
+  <div class="overlay"></div>
+  <div class="container" id="login-container">
+    <img src="https://www.brimez.com/wp-content/uploads/2023/12/marcas_brimez_r.png" alt="Logo Brimez" class="logo">
+    <div class="slogan">Soluciones Industriales Marítimas</div>
+    <h2>Iniciar Sesión</h2>
+    <input type="text" placeholder="Usuario" id="usuario">
+    <input type="password" placeholder="Contraseña" id="contrasena">
+    <button onclick="iniciarSesion()">Ingresar</button>
+    <div class="error-message" id="mensajeError">Usuario o contraseña incorrectos.</div>
+  </div>
+
+  <script>
+    const empleados = [
+      { usuario: 'brimezadmin', contrasena: 'brimez1' },
+      { usuario: 'empleado2', contrasena: 'clave2' }
+    ];
+
+    function iniciarSesion() {
+      const usuario = document.getElementById('usuario').value;
+      const contrasena = document.getElementById('contrasena').value;
+      const mensajeError = document.getElementById('mensajeError');
+      const contenedor = document.getElementById('login-container');
+
+      const empleadoValido = empleados.find(e => e.usuario === usuario && e.contrasena === contrasena);
+
+      if (empleadoValido) {
+        sessionStorage.setItem('logueado', 'true');
+        window.location.href = 'index.html';
+      } else {
+        mensajeError.classList.add('show');
+        contenedor.classList.add('shake');
+        setTimeout(() => contenedor.classList.remove('shake'), 300);
+      }
+    }
+
+    // Escuchar Enter desde los campos
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        iniciarSesion();
+      }
+    });
+  </script>
+
+
+
+
+
+
+
+
+</body>
+</html>

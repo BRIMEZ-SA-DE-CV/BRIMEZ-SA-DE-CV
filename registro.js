@@ -1,3 +1,4 @@
+import { db } from "./firebase-config.js";
 // registro.js - Lógica para registro de entradas y salidas
 
 // Inicializar registros
@@ -219,3 +220,34 @@ window.addEventListener("DOMContentLoaded", () => {
     btnRegistrar.addEventListener("click", registrarAccion);
   }
 });
+
+
+if (accion === "Salida") {
+  db.collection("registros")
+    .where("id", "==", idEmpleado)
+    .where("accion", "==", "Entrada")
+    .where("fecha", "==", fecha)
+    .orderBy("fechaCompleta", "desc")
+    .limit(1)
+    .get()
+    .then(snapshot => {
+      if (!snapshot.empty) {
+        const entrada = snapshot.docs[0].data();
+        const horaEntrada = new Date(entrada.fechaCompleta);
+        const horaSalida = ahora;
+        const diffMs = horaSalida - horaEntrada;
+        const diffMins = Math.floor(diffMs / 60000);
+        const horas = Math.floor(diffMins / 60);
+        const minutos = diffMins % 60;
+        const duracion = `Duración: ${horas}h ${minutos}m`;
+        db.collection("reportes").doc(idEmpleado).set({
+          [fecha]: {
+            nombre: nombre,
+            entrada: entrada.hora,
+            salida: hora,
+            duracion: duracion
+          }
+        }, { merge: true });
+      }
+    });
+}
