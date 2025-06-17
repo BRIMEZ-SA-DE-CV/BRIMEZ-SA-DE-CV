@@ -395,6 +395,121 @@
       return h * 60 + m + (s ? s / 60 : 0);
     }
 
+    // Carga y muestra registros filtrados, descontando comida personalizada
+    async function cargarRegistros() {
+      const contenedor = document.getElementById('registroContainer');
+      contenedor.innerHTML = "Cargando...";
+      registrosPorEmpleado = new Map();
+
+      const snap = await getDocs(query(collection(db, "registros_diarios"), orderBy("fecha", "desc")));
+      const limite = obtenerFechaLimite();
+      let totalHoras = 0, totalExtras = 0, totalRegistros = 0;
+
+      // Cache de horarios de comida
+      const cacheComidas = {};
+
+      for (const docu of snap.docs) {
+        const r = docu.data();
+        if (r.fecha < limite) continue;
+        if (empleadoActual !== 'todos' && r.id !== empleadoActual) continue;
+        const clave = `${r.id}_${r.nombre}`;
+        if (!registrosPorEmpleado.has(clave)) registrosPorEmpleado.set(clave, []);
+        registrosPorEmpleado.get(clave).push(r);
+      }
+
+      let html = '';
+      for (const [clave, registros] of registrosPorEmpleado.entries()) {
+        const [id, nombre] = clave.split('_');
+        html += `<h3>👤 ${nombre} (ID: ${id})</h3>`;
+        html += `<table><thead><tr><th>ID</th><th>Nombre</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Horas Extras</th>`;
+        if (periodoActual !== 'dia') {
+          html += `<th>Informes PDF</th>`;
+        }
+        html += `</tr></thead><tbody>`;
+        let sumaHoras = 0, sumaExtras = 0;
+        for (const r of registros) {
+          let entrada = r.horaEntrada || '-';
+          let salida = r.horaSalida || '-';
+          let horas = 0, extras = 0;
+          if (entrada !== '-' && salida !== '-') {
+            // Obtener horario de comida personalizado
+            let comidaInicio = null, comidaFin = null;
+            if (!cacheComidas[id]) {
+              const docEmp = await getDoc(doc(db, "empleados", id));
+              if (docEmp.exists()) {
+                const emp = docEmp.data();
+                comidaInicio = emp.comidaInicio;
+                comidaFin = emp.comidaFin;
+                cacheComidas[id] = {comidaInicio, comidaFin};
+              } else {
+                cacheComidas[id] = {comidaInicio: null, comidaFin: null};
+              }
+            } else {
+              ({comidaInicio, comidaFin} = cacheComidas[id]);
+            }
+            // Calcular minutos trabajados descontando comida
+            const minEntrada = horaToMinutos(entrada);
+            const minSalida = horaToMinutos(salida);
+            let minutosTrabajados = minSalida - minEntrada;
+            if (comidaInicio && comidaFin) {
+              const minComidaInicio = horaToMinutos(comidaInicio);
+              const minComidaFin = horaToMinutos(comidaFin);
+              // Descontar solo si hay superposición
+              const minutosDescontar = calcularSuperposicion(minEntrada, minSalida, minComidaInicio, minComidaFin);
+              minutosTrabajados -= minutosDescontar;
+            }
+            horas = minutosTrabajados / 60;
+            extras = horas > 8 ? horas - 8 : 0;
+          }
+          sumaHoras += horas;
+          sumaExtras += extras;
+          totalHoras += horas;
+          totalExtras += extras;
+          totalRegistros++;
+          html += `<tr><td>${r.id}</td><td>${r.nombre}</td><td>${r.fecha}</td><td>${entrada}</td><td>${salida}</td><td>${formatearHorasDecimal(horas)}</td><td>${formatearHorasDecimal(extras, true)}</td>`;
+          // No agregar botón en filas individuales de período
+          if (periodoActual !== 'dia') {
+            html += `<td></td>`;
+          }
+          html += `</tr>`;
+        }
+        // Fila resumen para periodo
+        if (periodoActual !== 'dia') {
+          html += `<tr style="font-weight:bold; background:#f0f0f0;"><td colspan="5" style="text-align:right;">Totales período:</td><td>${formatearHorasDecimal(sumaHoras)}</td><td>${formatearHorasDecimal(sumaExtras)}</td><td style="text-align:center;"><button class="pdf-icon-container btn-descargar-pdf-periodo" data-id="${id}" data-nombre="${nombre}" title="Descargar Informe PDF del período">Descargar Informe PDF <span class="pdf-icon">📄</span></button></td></tr>`;
+        }
+        html += '</tbody></table>';
+      }
+      contenedor.innerHTML = html || "<p>No hay registros para mostrar.</p>";
+      document.getElementById('totalRegistros').textContent = totalRegistros;
+      document.getElementById('totalHoras').textContent = formatearHorasDecimal(totalHoras);
+      document.getElementById('totalExtras').textContent = formatearHorasDecimal(totalExtras);
+      actualizarVisibilidadHoras();
+      // Eventos PDF
+      document.querySelectorAll('.btn-descargar-pdf').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const id = this.getAttribute('data-id');
+          const nombre = this.getAttribute('data-nombre');
+          const registrosFiltrados = registrosPorEmpleado.get(`${id}_${nombre}`);
+          await generarPDFUsuario(nombre, id, registrosFiltrados, periodoActual);
+        });
+      });
+      document.querySelectorAll('.btn-descargar-pdf-todo-periodo').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const id = this.getAttribute('data-id');
+          const nombre = this.getAttribute('data-nombre');
+          const registrosFiltrados = registrosPorEmpleado.get(`${id}_${nombre}`);
+          await generarPDFUsuario(nombre, id, registrosFiltrados, periodoActual);
+        });
+      });
+    }
+
+    // Convierte una hora "HH:mm:ss" a minutos desde las 00:00
+    function horaToMinutos(hora) {
+      if (!hora) return null;
+      const [h, m, s] = hora.split(":").map(Number);
+      return h * 60 + m + (s ? s / 60 : 0);
+    }
+
 
 
 
