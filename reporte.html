@@ -519,8 +519,9 @@ async function cargarRegistros() {
     }
 
     if (periodoActual !== 'dia') {
-      html += `<tr class="totales-fila"> background:#f0f0f0;"><td colspan="5" style="text-align:right;">Totales período:</td><td>${formatearHorasDecimal(sumaHoras)}</td><td>${formatearHorasDecimal(sumaExtras)}</td><td style="text-align:center;"><button class="pdf-icon-container btn-descargar-pdf-periodo" data-id="${id}" data-nombre="${nombre}" title="Descargar Informe PDF del período">PDF <span class="pdf-icon">📄</span></button></td></tr>`;
-    }
+  html += `<tr class="totales-fila" style="background:#f0f0f0;"><td colspan="5" style="text-align:right;">Totales período:</td><td>${formatearHorasDecimal(sumaHoras)}</td><td>${formatearHorasDecimal(sumaExtras)}</td><td style="text-align:center;"><button class="pdf-icon-container btn-descargar-pdf-periodo" data-id="${id}" data-nombre="${nombre}" title="Descargar Informe PDF del período">PDF <span class="pdf-icon">📄</span></button></td></tr>`;
+}
+
 
     html += '</tbody></table>';
     registrosPorEmpleado.set(clave, registrosParaPDF); // Para el PDF
